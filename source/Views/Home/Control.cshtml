@@ -1,0 +1,19 @@
+﻿@model ControlViewModel
+@{
+    ViewData["Title"] = "Privacy Policy";
+}
+<h1>Controller</h1>
+
+<input type="hidden" id="token" value="@Model.Id" />
+<span class="status">Connecting...</span>
+
+<div id="cmds" class="btn-group" role="group" aria-label="Commands" style="display: none; position: fixed; bottom: 100px; right: 40px;">
+  <button type="button" class="btn btn-light btn-lg simple-ctrl" data-cmd="First">第一頁</button>
+  <button type="button" class="btn btn-light btn-lg simple-ctrl" data-cmd="Prev">上一頁</button>
+  <button type="button" class="btn btn-primary btn-lg simple-ctrl" data-cmd="Next">下一頁</button>
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript" src="~/js/control.js" asp-append-version="true"></script>
+}

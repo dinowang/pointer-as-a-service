@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "source"
+		},
+		{
+			"path": "installer"
+		},
+		{
+			"path": "manifest"
+		}
+	],
+	"settings": {}
+}

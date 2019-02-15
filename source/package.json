@@ -1,0 +1,18 @@
+{
+  "name": "Hexdigits.Azure.PointerAsAService",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aspnet/signalr": "^1.1.0",
+    "@types/jquery": "^3.3.29",
+    "@types/office-js": "0.0.155",
+    "@types/signalr": "^2.2.35"
+  }
+}

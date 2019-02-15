@@ -1,0 +1,22 @@
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <div id="qrcode"></div>
+    <div>
+        <a class="control" href="@Model.Url" title="@Model.Url" target="_blank">Remote Control</a>
+        | 
+        <a class="refresh" href="@Url.Action("Index")">Refresh</a>
+        | 
+        <span class="status">Connecting...</span>
+    </div>
+</div>
+
+<input type="hidden" id="token" value="@Model.Id" />
+
+@section Scripts
+{
+    <script type="text/javascript" src="~/js/index.js" asp-append-version="true"></script>
+}
