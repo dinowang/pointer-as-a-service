@@ -1,5 +1,3 @@
-using System;
-
 namespace Hexdigits.Azure.PointerAsAService.Models
 {
     public class ErrorViewModel
