@@ -26,11 +26,34 @@
         gtag('config', 'UA-15539315-4');
     </script>
 </head>
-<body>
+@{
+    var request = ViewContext.HttpContext.Request;
+    if (! request.Cookies.TryGetValue("theme", out var theme))
+    {
+        theme = "white";
+    }
+
+    var bodyClasses = string.Empty;
+    var navClasses = "navbar-light bg-white border-bottom";
+    var footClasses = "border-top";
+
+    switch (theme)
+    {
+        case "dark":
+            bodyClasses = "bg-secondary";
+            navClasses = "navbar-dark bg-bark";
+            footClasses = "bg-dark";
+            break;
+        default:
+            break;
+    }
+
+}
+<body class="@bodyClasses @theme @ViewData["BodyClasses"]">
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm @navClasses border-bottom box-shadow mb-3">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Pointer as a Service</a>
+                <a class="navbar-brand" href="#">Pointer as a Service</a>
             </div>
         </nav>
     </header>
@@ -40,7 +63,7 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="@footClasses footer text-muted">
         <div class="container">
             &copy; 2019 - CloudRiches
         </div>

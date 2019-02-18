@@ -1,5 +1,6 @@
-/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 for details on configuring this project to bundle and minify static web assets. */
+
 a.navbar-brand {
   white-space: normal;
   text-align: center;
@@ -11,7 +12,6 @@ a.navbar-brand {
 html {
   font-size: 14px;
 }
-
 @media (min-width: 768px) {
   html {
     font-size: 16px;
@@ -21,13 +21,12 @@ html {
 .border-top {
   border-top: 1px solid #e5e5e5;
 }
-
 .border-bottom {
   border-bottom: 1px solid #e5e5e5;
 }
 
 .box-shadow {
-  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
 }
 
 button.accept-policy {
@@ -46,7 +45,6 @@ body {
   /* Margin bottom by footer height */
   margin-bottom: 60px;
 }
-
 .footer {
   position: absolute;
   bottom: 0;
@@ -54,27 +52,32 @@ body {
   white-space: nowrap;
   /* Set the fixed height of the footer here */
   height: 60px;
-  line-height: 60px;
-  /* Vertically center the text there */
+  line-height: 60px; /* Vertically center the text there */
 }
 
 /* ---------------- */
-body.index.white #status, body.index.white #buttons {
-  color: auto;
+body.index {
+  &.white {
+    #status, #buttons {
+      color: auto;
+    }
+    #buttons a {
+      color: auto;      
+    }
+  }
+  &.dark {
+    #status, #buttons {
+      color: lightgrey;
+    }
+    #buttons a {
+      color: white;      
+    }
+    #qrcode canvas {
+      outline: solid 5px white;
+    }
+  }
 }
 
-body.index.white #buttons a {
-  color: auto;
-}
+body.control {
 
-body.index.dark #status, body.index.dark #buttons {
-  color: lightgrey;
-}
-
-body.index.dark #buttons a {
-  color: white;
-}
-
-body.index.dark #qrcode canvas {
-  outline: solid 5px white;
 }

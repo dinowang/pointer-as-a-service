@@ -80,7 +80,6 @@
 
             $.get("/refresh", (data, status, xhr) => {
                 token = data.id;
-                $("a.navbar-brand, a.refresh").attr("href", data.url);
                 $("a.control").attr("href", data.url).attr("title", data.url);
                 $('#qrcode').empty().qrcode({ width: 180, height: 180, text: data.url });
                 $("#token").val("src", data.id);
@@ -91,6 +90,27 @@
             });
             
             return false;
-        });
+        })
+        .on("click", "a.theme", _ => {
+            var $body = $("body"),
+                $nav = $("header nav"),
+                $footer = $("footer"),
+                theme = $body.is(".dark") ? "dark" : "white";
 
+            switch (theme)
+            {
+                case "white":
+                    $body.removeClass("white").addClass("dark bg-secondary");
+                    $nav.removeClass("navbar-light bg-white border-bottom").addClass("navbar-dark bg-dark");
+                    $footer.removeClass("border-top").addClass("bg-dark");
+                    document.cookie = "theme=dark";
+                    break;
+                case "dark":
+                    $body.removeClass("dark bg-secondary").addClass("white");
+                    $nav.removeClass("navbar-dark bg-dark").addClass("navbar-light bg-white border-bottom");
+                    $footer.removeClass("bg-dark").addClass("border-top");
+                    document.cookie = "theme=white";
+                    break;
+            }
+        });
 })();

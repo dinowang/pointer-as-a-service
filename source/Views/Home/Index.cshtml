@@ -1,16 +1,20 @@
 ﻿@model HomeViewModel
 @{
     ViewData["Title"] = "Slide Pane";
+    ViewData["BodyClasses"] = "index";
 }
 
 <div class="text-center">
     <div id="qrcode"></div>
-    <div>
+    <div id="status">
+        <span class="status">Connecting...</span>
+    </div>
+    <div id="buttons">
         <a class="control" href="@Model.Url" title="@Model.Url" target="_blank">Remote Control</a>
         | 
-        <a class="refresh" href="@Url.Action("Index")">Refresh</a>
+        <a class="refresh" href="#">Refresh</a>
         | 
-        <span class="status">Connecting...</span>
+        <a class="theme" href="#">Toogle Theme</span>
     </div>
 </div>
 

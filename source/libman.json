@@ -19,11 +19,6 @@
     {
       "library": "jquery.qrcode@1.0",
       "destination": "wwwroot/lib/jquery.qrcode"
-    },
-    {
-      "provider": "unpkg",
-      "library": "office-ui-fabric-core@9.6.1",
-      "destination": "wwwroot/lib/office-ui-fabric-core"
     }
   ]
 }
