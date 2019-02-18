@@ -24,7 +24,7 @@ curl https://raw.githubusercontent.com/dinowang/pointer-as-a-service/049a77a088b
 
 ### PowerPoint Online
 
-First, download Office Add-ins manifest from [here]([here](https://raw.githubusercontent.com/dinowang/pointer-as-a-service/049a77a088be44ff97909c24c22f2fc7c4d16381/manifest/pointer-as-a-service.xml)) save to your local disk.
+First, download Office Add-ins manifest from [here](https://raw.githubusercontent.com/dinowang/pointer-as-a-service/049a77a088be44ff97909c24c22f2fc7c4d16381/manifest/pointer-as-a-service.xml) and save to your local disk.
 
 ![Install Addins for PowerPoint Online](./images/powerpoint-online-install-addins.png)
 
