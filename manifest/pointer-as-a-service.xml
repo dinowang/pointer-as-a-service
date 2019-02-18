@@ -124,7 +124,7 @@
         <bt:Image id="Contoso.tpicon_80x80" DefaultValue="https://pointer-as-a-service.azurewebsites.net/assets/icon-80.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Contoso.Taskpane.Url" DefaultValue="https://pointer-as-a-service.azurewebsites.net/index.html" />
+        <bt:Url id="Contoso.Taskpane.Url" DefaultValue="https://pointer-as-a-service.azurewebsites.net/" />
         <bt:Url id="Contoso.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
         <bt:Url id="Contoso.DesktopFunctionFile.Url" DefaultValue="https://pointer-as-a-service.azurewebsites.net/function-file/function-file.html" />
       </bt:Urls>

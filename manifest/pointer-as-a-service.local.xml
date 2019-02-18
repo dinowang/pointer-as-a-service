@@ -124,7 +124,7 @@
         <bt:Image id="Contoso.tpicon_80x80" DefaultValue="http://localhost:5000/assets/icon-80.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Contoso.Taskpane.Url" DefaultValue="http://localhost:5000/index.html" />
+        <bt:Url id="Contoso.Taskpane.Url" DefaultValue="http://localhost:5000/" />
         <bt:Url id="Contoso.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
         <bt:Url id="Contoso.DesktopFunctionFile.Url" DefaultValue="http://localhost:5000/function-file/function-file.html" />
       </bt:Urls>
