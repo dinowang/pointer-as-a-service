@@ -8,6 +8,15 @@
                             .configureLogging(signalR.LogLevel.Information)
                             .build();
 
+    var updateStatus = function () {
+        if (Office.context && Office.context.document) {
+            var url = Office.context.document.url;
+            connection.invoke("UpdateStatus", token, url).catch(function (err) {
+                return console.error(err.toString());
+            });
+        }
+    };
+
     var connect = function () {
         $(".status").text("Connecting...");
         connection
@@ -17,13 +26,10 @@
                 connection.invoke("JoinGroup", token).catch(function (err) {
                     return console.error(err.toString());
                 });
-                var url = Office.context.document.url;
-                connection.invoke("UpdateStatus", token, url).catch(function (err) {
-                    return console.error(err.toString());
-                });
+                updateStatus();
             })
             .catch(err => {
-                $(".status").text("Failed and retry...");
+                $(".status").text("Reconnect...");
                 setTimeout(connect, 1000);
                 return console.error(err.toString());
             });
@@ -45,10 +51,7 @@
         });
     
         connection.on("PresenterJoined", _ => {
-            var url = Office.context.document.url;
-            connection.invoke("UpdateStatus", token, url).catch(function (err) {
-                return console.error(err.toString());
-            });
+            updateStatus();
         });
 
         connection.on("First", _ => {
@@ -77,6 +80,7 @@
 
             $.get("/refresh", (data, status, xhr) => {
                 token = data.id;
+                $("a.navbar-brand, a.refresh").attr("href", data.url);
                 $("a.control").attr("href", data.url).attr("title", data.url);
                 $('#qrcode').empty().qrcode({ width: 180, height: 180, text: data.url });
                 $("#token").val("src", data.id);

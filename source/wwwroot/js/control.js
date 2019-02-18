@@ -20,7 +20,7 @@
                 });
             })
             .catch(err => {
-                $(".status").text("Failed and retry...");
+                $(".status").text("Reconnect...");
                 setTimeout(connect, 1000);
                 return console.error(err.toString());
             });

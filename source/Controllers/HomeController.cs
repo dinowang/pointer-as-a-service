@@ -11,13 +11,11 @@ namespace Hexdigits.Azure.PointerAsAService.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly QrCodeService _qrCodeService;
         private readonly IdService _idService;
 
-        public HomeController(IdService idService, QrCodeService qrCodeService)
+        public HomeController(IdService idService)
         {
             _idService = idService;
-            _qrCodeService = qrCodeService;
         }
 
         [Route("~/{id?}")]
@@ -33,7 +31,6 @@ namespace Hexdigits.Azure.PointerAsAService.Controllers
             {
                 Id = id,
                 Url = url,
-                // Base64Url = _qrCodeService.GenerateBase64(url)
             };
 
             return View(viewModel);
@@ -48,7 +45,6 @@ namespace Hexdigits.Azure.PointerAsAService.Controllers
             {
                 Id = id,
                 Url = url,
-                // Base64Url = _qrCodeService.GenerateBase64(url)
             };
 
             return Json(viewModel);

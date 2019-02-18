@@ -34,9 +34,8 @@ namespace Hexdigits.Azure.PointerAsAService
             });
 
             services.AddTransient<IdService, IdService>();
-            services.AddTransient<QrCodeService, QrCodeService>();
 
-            services.AddSignalR();//.AddAzureSignalR();
+            services.AddSignalR();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
