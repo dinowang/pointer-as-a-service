@@ -6,7 +6,27 @@ Provide the easiest way of making a smartphone can control your presentation. Wo
 
 ## How it works
 
-![使用流程](./images/flow.jpg)
+![Flow](./images/flow.jpg)
+
+## Install Office Add-ins
+
+### PowerPoint for Windows
+
+https://docs.microsoft.com/en-us/office/dev/add-ins/testing/create-a-network-shared-folder-catalog-for-task-pane-and-content-add-ins
+
+### PowerPoint for macOS
+
+https://docs.microsoft.com/en-us/office/dev/add-ins/testing/sideload-an-office-add-in-on-ipad-and-mac 
+
+```bash
+curl https://raw.githubusercontent.com/dinowang/pointer-as-a-service/049a77a088be44ff97909c24c22f2fc7c4d16381/manifest/pointer-as-a-service.xml -o ~/Library/Containers/com.microsoft.Powerpoint/Data/Documents/wef/pointer-as-a-service.xml
+```
+
+### PowerPoint Online
+
+First, download Office Add-ins manifest from [here]([here](https://raw.githubusercontent.com/dinowang/pointer-as-a-service/049a77a088be44ff97909c24c22f2fc7c4d16381/manifest/pointer-as-a-service.xml)) save to your local disk.
+
+![Install Addins for PowerPoint Online](./images/powerpoint-online-install-addins.png)
 
 ## Used technology
 
