@@ -35,6 +35,8 @@ First, download Office Add-ins manifest from [here](https://raw.githubuserconten
 - ASP.NET Core SignalR
 - Office 365 PowerPoint
 
+[Build Instruction](source/README.md)
+
 ## License
 
 Copyright (c) 2019 CloudRiches [https://www.cloudriches.com/](https://www.cloudriches.com/)
