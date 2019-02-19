@@ -78,3 +78,16 @@ body.index.dark #buttons a {
 body.index.dark #qrcode canvas {
   outline: solid 5px white;
 }
+
+body.control .footer {
+  height: auto;
+}
+
+body.control .footer .touchpad {
+  position: absolute;
+  top: -1000px;
+  left: 0;
+  width: 100%;
+  height: 1000px;
+  background: transparent;
+}

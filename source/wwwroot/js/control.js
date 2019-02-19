@@ -40,6 +40,36 @@
         document.title = docName;
     });
     
+    $(document).ready(function () {
+        var manager = nipplejs.create({
+            zone: document.getElementById('touchpad'),
+            mode: 'dynamic',
+            position: { left: '50%', top: '50%' },
+            color: 'red'
+        });
+
+        var dir = null;
+
+        manager
+            .on("move", function (evt, nipple) {
+                dir = nipple.direction;
+            })
+            .on("end", function (evt, nipple) {
+                switch (dir.angle) {
+                    case "right":
+                        connection.invoke("Next", token).catch(function (err) {
+                            return console.error(err.toString());
+                        });
+                        break;
+                    case "left":
+                        connection.invoke("Prev", token).catch(function (err) {
+                            return console.error(err.toString());
+                        });
+                    break;
+                }
+            });
+    });
+
     $("body")
         .on("click", ".simple-ctrl", function (evt) {
             var $this = $(this),

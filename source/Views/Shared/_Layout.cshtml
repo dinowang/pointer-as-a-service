@@ -33,7 +33,7 @@
         theme = "white";
     }
 
-    var bodyClasses = string.Empty;
+    var bodyClasses = "";
     var navClasses = "navbar-light bg-white border-bottom";
     var footClasses = "border-top";
 
@@ -64,6 +64,7 @@
     </div>
 
     <footer class="@footClasses footer text-muted">
+        @RenderSection("Footer", required: false)
         <div class="container">
             &copy; 2019 - CloudRiches
         </div>
@@ -75,6 +76,7 @@
         <script src="~/lib/jquery.qrcode/jquery.qrcode.min.js"></script>
         <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.debug.js"></script>
         <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+        <script src="~/lib/nipplejs/nipplejs.js"></script>
         <script src="~/lib/vconsole/dist/vconsole.min.js"></script>
         <script>var vconsole = new VConsole();</script>
     </environment>
@@ -98,6 +100,11 @@
         </script>
         <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
         <script src="~/lib/signalr/dist/browser/signalr.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.7.3/nipplejs.min.js"
+                asp-fallback-src="~/lib/nipplejs/nipplejs.min.js"
+                asp-fallback-test="nipplejs"
+                crossorigin="anonymous">
+        </script>
     </environment>
 
     @RenderSection("Scripts", required: false)
