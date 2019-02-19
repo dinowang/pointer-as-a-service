@@ -8,7 +8,7 @@
                             .configureLogging(signalR.LogLevel.Information)
                             .build();
 
-    var connect = function () {
+    function connect() {
         $(".status").text("Connecting...");
         connection
             .start()

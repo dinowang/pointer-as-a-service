@@ -8,16 +8,41 @@
                             .configureLogging(signalR.LogLevel.Information)
                             .build();
 
-    var updateStatus = function () {
+    function updateStatus() {
         if (Office.context && Office.context.document) {
             var url = Office.context.document.url;
             connection.invoke("UpdateStatus", token, url).catch(function (err) {
                 return console.error(err.toString());
             });
         }
-    };
+    }
 
-    var connect = function () {
+    function setTheme(theme) {
+        var $body = $("body"),
+            $nav = $("header nav"),
+            $footer = $("footer");
+
+        switch (theme)
+        {
+            case "dark":
+                $body.removeClass("white").addClass("dark bg-secondary");
+                $nav.removeClass("navbar-light bg-white border-bottom").addClass("navbar-dark bg-dark");
+                $footer.removeClass("border-top").addClass("bg-dark");
+                break;
+            case "white":
+                $body.removeClass("dark bg-secondary").addClass("white");
+                $nav.removeClass("navbar-dark bg-dark").addClass("navbar-light bg-white border-bottom");
+                $footer.removeClass("bg-dark").addClass("border-top");
+                break;
+        }
+            
+        document.cookie = "theme=" + theme;
+        if (Office.context && Office.context.document) {
+            Office.context.document.settings.set('theme', theme);
+        }
+    }
+
+    function connect() {
         $(".status").text("Connecting...");
         connection
             .start()
@@ -33,7 +58,7 @@
                 setTimeout(connect, 1000);
                 return console.error(err.toString());
             });
-    };
+    }
 
     connect();
 
@@ -44,6 +69,11 @@
         });
 
     Office.onReady(reason => {
+
+        var theme = Office.context.document.settings.get('theme');
+        if (theme) {
+            setTheme(theme);
+        }
 
         connection.on("UpdateStatus", data => {
             var docName = data.docName || "(noname)";
@@ -93,24 +123,8 @@
         })
         .on("click", "a.theme", _ => {
             var $body = $("body"),
-                $nav = $("header nav"),
-                $footer = $("footer"),
-                theme = $body.is(".dark") ? "dark" : "white";
+                theme = $body.is(".dark") ? "white" : "dark";
 
-            switch (theme)
-            {
-                case "white":
-                    $body.removeClass("white").addClass("dark bg-secondary");
-                    $nav.removeClass("navbar-light bg-white border-bottom").addClass("navbar-dark bg-dark");
-                    $footer.removeClass("border-top").addClass("bg-dark");
-                    document.cookie = "theme=dark";
-                    break;
-                case "dark":
-                    $body.removeClass("dark bg-secondary").addClass("white");
-                    $nav.removeClass("navbar-dark bg-dark").addClass("navbar-light bg-white border-bottom");
-                    $footer.removeClass("bg-dark").addClass("border-top");
-                    document.cookie = "theme=white";
-                    break;
-            }
+            setTheme(theme);
         });
 })();
