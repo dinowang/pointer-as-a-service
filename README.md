@@ -19,7 +19,7 @@ https://docs.microsoft.com/en-us/office/dev/add-ins/testing/create-a-network-sha
 https://docs.microsoft.com/en-us/office/dev/add-ins/testing/sideload-an-office-add-in-on-ipad-and-mac 
 
 ```bash
-curl https://raw.githubusercontent.com/dinowang/pointer-as-a-service/049a77a088be44ff97909c24c22f2fc7c4d16381/manifest/pointer-as-a-service.xml -o ~/Library/Containers/com.microsoft.Powerpoint/Data/Documents/wef/pointer-as-a-service.xml
+curl https://raw.githubusercontent.com/dinowang/pointer-as-a-service/master/manifest/pointer-as-a-service.xml -o ~/Library/Containers/com.microsoft.Powerpoint/Data/Documents/wef/pointer-as-a-service.xml
 ```
 
 ### PowerPoint Online
