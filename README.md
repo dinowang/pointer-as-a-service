@@ -8,6 +8,10 @@ Provide the easiest way of making a smartphone can control your presentation. Wo
 
 ![Flow](./images/flow.jpg)
 
+### Themes
+
+![Host Themes](./images/host-themes.png)
+
 ## Install Office Add-ins
 
 ### PowerPoint for Windows
