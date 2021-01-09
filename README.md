@@ -44,6 +44,4 @@ First, download Office Add-ins manifest from [here](https://raw.githubuserconten
 
 ## License
 
-Copyright (c) 2019 CloudRiches [https://www.cloudriches.com/](https://www.cloudriches.com/)
-
 The project is licensed under the MIT license.
