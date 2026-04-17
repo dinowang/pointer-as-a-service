@@ -551,3 +551,9 @@ src/functions/dist/
 # Prompt drafts
 .prompt/
 
+# IDE / editor cache
+*.lscache
+
+# Screenshots in repo root
+/*.png
+
