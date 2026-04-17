@@ -2,6 +2,7 @@
   "name": "pointer-as-a-service-functions",
   "version": "1.0.0",
   "description": "Azure Functions for Pointer as a Service - negotiate endpoint for Azure Web PubSub",
+  "main": "dist/functions/*.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
