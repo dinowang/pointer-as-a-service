@@ -136,6 +136,7 @@ function PubSubClient(wsUrl) {
   };
 
   self.joinGroup = function (group) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
     ws.send(JSON.stringify({
       type: "joinGroup",
       group: group,
@@ -144,6 +145,7 @@ function PubSubClient(wsUrl) {
   };
 
   self.sendToGroup = function (group, data, dataType, options) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
     var msg = {
       type: "sendToGroup",
       group: group,

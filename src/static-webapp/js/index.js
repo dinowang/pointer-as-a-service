@@ -69,8 +69,6 @@
     }
 
     token = Shared.generateToken();
-    const newUrl = `${window.location.pathname}?id=${token}`;
-    window.history.replaceState(null, "", newUrl);
     document.getElementById("token").value = token;
     renderQrCode();
 
@@ -95,6 +93,7 @@
 
       client.on("disconnected", () => {
         Shared.setStatus("connecting", "Reconnecting...");
+        setTimeout(connectPubSub, 2000);
       });
 
       client.on("group-message", (e) => {

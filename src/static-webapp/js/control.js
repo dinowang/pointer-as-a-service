@@ -41,6 +41,7 @@
 
       client.on("disconnected", () => {
         Shared.setStatus("connecting", "Reconnecting...");
+        setTimeout(connectPubSub, 2000);
       });
 
       client.on("group-message", (e) => {
