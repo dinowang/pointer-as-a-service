@@ -120,21 +120,21 @@
         Office.context.document.goToByIdAsync(
           Office.Index.First,
           Office.GoToType.Index,
-          () => syncCurrentSlide()
+          () => setTimeout(syncCurrentSlide, 500)
         );
         break;
       case "Prev":
         Office.context.document.goToByIdAsync(
           Office.Index.Previous,
           Office.GoToType.Index,
-          () => syncCurrentSlide()
+          () => setTimeout(syncCurrentSlide, 500)
         );
         break;
       case "Next":
         Office.context.document.goToByIdAsync(
           Office.Index.Next,
           Office.GoToType.Index,
-          () => syncCurrentSlide()
+          () => setTimeout(syncCurrentSlide, 500)
         );
         break;
       case "GoToSlide":
@@ -142,7 +142,7 @@
           Office.context.document.goToByIdAsync(
             data.slideId,
             Office.GoToType.Index,
-            () => syncCurrentSlide()
+            () => setTimeout(syncCurrentSlide, 500)
           );
         }
         break;
@@ -179,7 +179,10 @@
         selectedSlides.load("items/id");
         await context.sync();
 
-        if (selectedSlides.items.length === 0) return;
+        if (selectedSlides.items.length === 0) {
+          console.warn("syncCurrentSlide: no slides selected");
+          return;
+        }
 
         const slide = selectedSlides.items[0];
         const slideIndex = await getSlideIndex(context, slide.id);
@@ -191,18 +194,36 @@
           await context.sync();
           imageBase64 = image.value;
         } catch (e) {
-          console.warn("getImageAsBase64 not supported:", e.message);
+          console.warn("getImageAsBase64 not available:", e.message);
         }
 
-        // Get current slide notes (PowerPointApi 1.3+)
+        // Get current slide notes (PowerPointApi 1.5+)
         let notesText = "";
         try {
-          slide.notesPage.notesTextFrame.load("text");
+          const notesSlide = slide.notesSlide;
+          notesSlide.load("shapes");
           await context.sync();
-          notesText = slide.notesPage.notesTextFrame.text;
+          // Notes text body is typically in shape at index 1
+          for (let i = 0; i < notesSlide.shapes.items.length; i++) {
+            const shape = notesSlide.shapes.items[i];
+            shape.textFrame.load("textRange/text");
+          }
+          await context.sync();
+          for (let i = 0; i < notesSlide.shapes.items.length; i++) {
+            const shape = notesSlide.shapes.items[i];
+            try {
+              const text = shape.textFrame.textRange.text;
+              if (text && text.trim()) {
+                notesText = text;
+                break;
+              }
+            } catch (_) { /* shape has no text frame */ }
+          }
         } catch (e) {
-          console.warn("Notes not supported:", e.message);
+          console.warn("Notes not available:", e.message);
         }
+
+        console.log("syncCurrentSlide:", { slideIndex, hasImage: !!imageBase64, notesLength: notesText.length });
 
         if (client) {
           client.sendToGroup(
@@ -247,11 +268,21 @@
 
           let notes = "";
           try {
-            slide.notesPage.notesTextFrame.load("text");
+            const notesSlide = slide.notesSlide;
+            notesSlide.load("shapes");
             await context.sync();
-            notes = slide.notesPage.notesTextFrame.text;
+            for (let j = 0; j < notesSlide.shapes.items.length; j++) {
+              notesSlide.shapes.items[j].textFrame.load("textRange/text");
+            }
+            await context.sync();
+            for (let j = 0; j < notesSlide.shapes.items.length; j++) {
+              try {
+                const text = notesSlide.shapes.items[j].textFrame.textRange.text;
+                if (text && text.trim()) { notes = text; break; }
+              } catch (_) { /* no text frame */ }
+            }
           } catch (e) {
-            // PowerPointApi 1.3 not available
+            // Notes API not available
           }
 
           slideList.push({
