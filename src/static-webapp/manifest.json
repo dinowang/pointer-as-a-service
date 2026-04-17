@@ -9,14 +9,25 @@
   "theme_color": "#0078d4",
   "icons": [
     {
+      "src": "assets/icon-16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
       "src": "assets/icon-80.png",
       "sizes": "80x80",
       "type": "image/png"
     },
     {
       "src": "assets/hi-res-icon.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "sizes": "300x300",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
