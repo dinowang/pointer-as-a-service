@@ -201,18 +201,16 @@
         let notesText = "";
         try {
           const notesSlide = slide.notesSlide;
-          notesSlide.load("shapes");
+          const shapes = notesSlide.shapes;
+          shapes.load("items");
           await context.sync();
-          // Notes text body is typically in shape at index 1
-          for (let i = 0; i < notesSlide.shapes.items.length; i++) {
-            const shape = notesSlide.shapes.items[i];
-            shape.textFrame.load("textRange/text");
+          for (let i = 0; i < shapes.items.length; i++) {
+            shapes.items[i].textFrame.load("textRange/text");
           }
           await context.sync();
-          for (let i = 0; i < notesSlide.shapes.items.length; i++) {
-            const shape = notesSlide.shapes.items[i];
+          for (let i = 0; i < shapes.items.length; i++) {
             try {
-              const text = shape.textFrame.textRange.text;
+              const text = shapes.items[i].textFrame.textRange.text;
               if (text && text.trim()) {
                 notesText = text;
                 break;
@@ -269,15 +267,16 @@
           let notes = "";
           try {
             const notesSlide = slide.notesSlide;
-            notesSlide.load("shapes");
+            const shapes = notesSlide.shapes;
+            shapes.load("items");
             await context.sync();
-            for (let j = 0; j < notesSlide.shapes.items.length; j++) {
-              notesSlide.shapes.items[j].textFrame.load("textRange/text");
+            for (let j = 0; j < shapes.items.length; j++) {
+              shapes.items[j].textFrame.load("textRange/text");
             }
             await context.sync();
-            for (let j = 0; j < notesSlide.shapes.items.length; j++) {
+            for (let j = 0; j < shapes.items.length; j++) {
               try {
-                const text = notesSlide.shapes.items[j].textFrame.textRange.text;
+                const text = shapes.items[j].textFrame.textRange.text;
                 if (text && text.trim()) { notes = text; break; }
               } catch (_) { /* no text frame */ }
             }
