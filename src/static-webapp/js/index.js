@@ -331,7 +331,9 @@
         break;
       case "PresenterJoined":
         syncStatus();
-        syncAllSlides();
+        syncAllSlides().catch(function (err) {
+          console.error("syncAllSlides unhandled:", err);
+        });
         break;
     }
   }
@@ -385,15 +387,25 @@
     try {
       // Step 1: Extract notes from OOXML (getFileAsync + JSZip)
       var notesByIndex = [];
-      try {
-        console.log("syncAllSlides: downloading PPTX for notes extraction...");
-        var fileData = await getFileAsUint8Array();
-        console.log("syncAllSlides: PPTX downloaded,", fileData.length, "bytes, parsing notes...");
-        notesByIndex = await extractNotesFromPptx(fileData);
-        var notesCount = notesByIndex.filter(function (n) { return n.length > 0; }).length;
-        console.log("syncAllSlides: extracted notes for", notesCount, "/", notesByIndex.length, "slides");
-      } catch (notesErr) {
-        console.warn("syncAllSlides: notes extraction failed:", notesErr.message);
+      if (typeof JSZip !== "undefined") {
+        try {
+          console.log("syncAllSlides: downloading PPTX for notes extraction...");
+          // Timeout after 15 seconds to avoid blocking thumbnails
+          var fileData = await Promise.race([
+            getFileAsUint8Array(),
+            new Promise(function (_, reject) {
+              setTimeout(function () { reject(new Error("getFileAsync timeout (15s)")); }, 15000);
+            })
+          ]);
+          console.log("syncAllSlides: PPTX downloaded,", fileData.length, "bytes, parsing notes...");
+          notesByIndex = await extractNotesFromPptx(fileData);
+          var notesCount = notesByIndex.filter(function (n) { return n.length > 0; }).length;
+          console.log("syncAllSlides: extracted notes for", notesCount, "/", notesByIndex.length, "slides");
+        } catch (notesErr) {
+          console.warn("syncAllSlides: notes extraction failed:", notesErr.message);
+        }
+      } else {
+        console.warn("syncAllSlides: JSZip not loaded, skipping notes");
       }
 
       // Step 2: Get thumbnails via PowerPoint Rich API
