@@ -100,11 +100,26 @@
         break;
 
       case "AllSlides":
-        allSlides = data.slides || [];
-        console.log("Controller: AllSlides received,", allSlides.length, "slides",
-          allSlides.map(function (s, i) { return "slide" + i + ": thumb=" + (s.thumbnail ? s.thumbnail.length : 0) + " notes=" + s.notes.length; }));
+        var incoming = data.slides || [];
+        var offset = data.offset || 0;
+        var total = data.total || incoming.length;
+
+        // If first chunk, reset
+        if (offset === 0) {
+          allSlides = new Array(total);
+        }
+        // Place chunk at correct offset
+        for (var ci = 0; ci < incoming.length; ci++) {
+          allSlides[offset + ci] = incoming[ci];
+        }
+
+        console.log("Controller: AllSlides chunk offset=" + offset + " count=" + incoming.length + " total=" + total +
+          " received=" + allSlides.filter(Boolean).length);
+
+        // Render grid with whatever we have
         renderSlidesGrid();
-        // Update current slide if we have index
+
+        // Update current slide if we have it
         if (currentSlideIndex >= 0 && allSlides[currentSlideIndex]) {
           updateCurrentSlide(
             allSlides[currentSlideIndex].thumbnail,
