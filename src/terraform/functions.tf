@@ -1,5 +1,5 @@
 resource "azurerm_storage_account" "functions" {
-  name                     = "${replace(var.prefix, "-", "")}funcsa"
+  name                     = "st${replace(var.prefix, "-", "")}"
   resource_group_name      = azurerm_resource_group.main.name
   location                 = azurerm_resource_group.main.location
   account_tier             = "Standard"
@@ -9,7 +9,7 @@ resource "azurerm_storage_account" "functions" {
 }
 
 resource "azurerm_service_plan" "functions" {
-  name                = "${var.prefix}-func-plan"
+  name                = "asp-${var.prefix}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   os_type             = "Linux"
@@ -19,7 +19,7 @@ resource "azurerm_service_plan" "functions" {
 }
 
 resource "azurerm_linux_function_app" "main" {
-  name                       = "${var.prefix}-func"
+  name                       = "func-${var.prefix}"
   resource_group_name        = azurerm_resource_group.main.name
   location                   = azurerm_resource_group.main.location
   service_plan_id            = azurerm_service_plan.functions.id
