@@ -13,10 +13,6 @@
 
   if (!token) {
     token = Shared.generateToken();
-    // Office Add-in webview may not expose history API
-    if (window.history && typeof window.history.replaceState === "function") {
-      window.history.replaceState(null, "", window.location.pathname + "?id=" + token);
-    }
   }
 
   document.getElementById("token").value = token;
