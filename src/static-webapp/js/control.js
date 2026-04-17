@@ -69,7 +69,15 @@
 
       case "SlideChanged":
         currentSlideIndex = data.slideIndex ?? -1;
-        updateCurrentSlide(data.image, data.notes);
+        // Use cached allSlides for thumbnail and notes (no heavy data over WebSocket)
+        if (currentSlideIndex >= 0 && allSlides[currentSlideIndex]) {
+          updateCurrentSlide(
+            allSlides[currentSlideIndex].thumbnail,
+            allSlides[currentSlideIndex].notes
+          );
+        } else {
+          updateCurrentSlide(null, null);
+        }
         updateNextSlidePreview();
         highlightActiveSlide();
         break;

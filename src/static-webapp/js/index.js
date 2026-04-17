@@ -212,52 +212,12 @@
         const slide = selectedSlides.items[0];
         const slideIndex = await getSlideIndex(context, slide.id);
 
-        // Get current slide image (PowerPointApi 1.4+)
-        let imageBase64 = null;
-        try {
-          const image = slide.getImageAsBase64();
-          await context.sync();
-          imageBase64 = image.value;
-        } catch (e) {
-          console.warn("getImageAsBase64 not available:", e.message);
-        }
-
-        // Get current slide notes (PowerPointApi 1.5+)
-        let notesText = "";
-        try {
-          const notesSlide = slide.notesSlide;
-          const shapes = notesSlide.shapes;
-          shapes.load("items");
-          await context.sync();
-          for (let i = 0; i < shapes.items.length; i++) {
-            shapes.items[i].textFrame.load("textRange/text");
-          }
-          await context.sync();
-          for (let i = 0; i < shapes.items.length; i++) {
-            try {
-              const text = shapes.items[i].textFrame.textRange.text;
-              if (text && text.trim()) {
-                notesText = text;
-                break;
-              }
-            } catch (_) { /* shape has no text frame */ }
-          }
-        } catch (e) {
-          console.warn("Notes not available:", e.message);
-        }
-
-        console.log("syncCurrentSlide:", { slideIndex, hasImage: !!imageBase64, notesLength: notesText.length });
+        console.log("syncCurrentSlide:", { slideIndex, slideId: slide.id });
 
         if (client) {
           client.sendToGroup(
             token,
-            {
-              type: "SlideChanged",
-              slideId: slide.id,
-              slideIndex,
-              image: imageBase64,
-              notes: notesText,
-            },
+            { type: "SlideChanged", slideId: slide.id, slideIndex },
             "json",
             { noEcho: true }
           );
