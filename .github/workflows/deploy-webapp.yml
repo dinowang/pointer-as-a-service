@@ -57,6 +57,26 @@ jobs:
             fi
           fi
 
+      - name: Resolve Function App URL
+        id: func-url
+        run: |
+          FUNC_HOST=$(az functionapp list \
+            --query "[?contains(name,'pointer')].defaultHostName | [0]" -o tsv)
+          if [ -n "$FUNC_HOST" ]; then
+            echo "url=https://$FUNC_HOST" >> "$GITHUB_OUTPUT"
+            echo "✅ Resolved Function App URL: https://$FUNC_HOST"
+          else
+            echo "❌ Could not resolve Function App URL."
+            exit 1
+          fi
+
+      - name: Generate config.js
+        run: |
+          cat > "${{ env.STATIC_WEBAPP_DIR }}/js/config.js" << EOF
+          window.__FUNCTIONS_BASE_URL = "${{ steps.func-url.outputs.url }}";
+          EOF
+          echo "Generated config.js with Functions URL: ${{ steps.func-url.outputs.url }}"
+
       - name: Generate Manifest
         run: |
           sed 's|{{BASE_URL}}|${{ steps.base-url.outputs.url }}|g' \
