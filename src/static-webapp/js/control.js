@@ -94,7 +94,9 @@
   function updateCurrentSlide(imageBase64, notes) {
     const container = document.getElementById("currentSlide");
     if (imageBase64) {
-      container.innerHTML = `<img src="data:image/png;base64,${imageBase64}" alt="Current slide" />`;
+      // Detect format: JPEG thumbnails from AllSlides, PNG from SlideChanged
+      var mime = imageBase64.startsWith("/9j/") ? "image/jpeg" : "image/png";
+      container.innerHTML = '<img src="data:' + mime + ';base64,' + imageBase64 + '" alt="Current slide" />';
     }
 
     const notesText = document.getElementById("notesText");
@@ -107,7 +109,8 @@
     const nextIndex = currentSlideIndex + 1;
 
     if (nextIndex < allSlides.length && allSlides[nextIndex]?.thumbnail) {
-      thumb.innerHTML = `<img src="data:image/png;base64,${allSlides[nextIndex].thumbnail}" alt="Next slide" />`;
+      var nextMime = allSlides[nextIndex].thumbnail.startsWith("/9j/") ? "image/jpeg" : "image/png";
+      thumb.innerHTML = '<img src="data:' + nextMime + ';base64,' + allSlides[nextIndex].thumbnail + '" alt="Next slide" />';
       section.style.display = "flex";
     } else {
       section.style.display = "none";
@@ -191,8 +194,8 @@
       item.dataset.index = i;
 
       const img = slide.thumbnail
-        ? `<img src="data:image/png;base64,${slide.thumbnail}" alt="Slide ${i + 1}" />`
-        : `<div style="width:100%;aspect-ratio:16/9;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--text-muted);">Slide ${i + 1}</div>`;
+        ? '<img src="data:' + (slide.thumbnail.startsWith("/9j/") ? "image/jpeg" : "image/png") + ';base64,' + slide.thumbnail + '" alt="Slide ' + (i + 1) + '" />'
+        : '<div style="width:100%;aspect-ratio:16/9;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--text-muted);">Slide ' + (i + 1) + '</div>';
 
       item.innerHTML = `${img}<div class="slide-number">${i + 1}</div>`;
 

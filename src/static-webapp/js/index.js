@@ -9,6 +9,28 @@
   let client = null;
   let officeReady = false;
 
+  // Compress base64 PNG to smaller JPEG for efficient WebSocket transfer
+  function compressImage(base64Png, maxWidth, quality) {
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, maxWidth / img.width);
+        var w = Math.round(img.width * scale);
+        var h = Math.round(img.height * scale);
+        var canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        // Export as JPEG, strip data URI prefix to get raw base64
+        var dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(dataUrl.replace(/^data:image\/jpeg;base64,/, ""));
+      };
+      img.onerror = function () { resolve(null); };
+      img.src = "data:image/png;base64," + base64Png;
+    });
+  }
+
   // ---------- Initialization ----------
 
   if (!token) {
@@ -88,7 +110,10 @@
       client.on("connected", () => {
         Shared.setStatus("connected", "Connected");
         client.joinGroup(token);
-        if (officeReady) syncStatus();
+        if (officeReady) {
+          syncStatus();
+          syncAllSlides();
+        }
       });
 
       client.on("disconnected", () => {
@@ -252,14 +277,31 @@
         slides.load("items/id");
         await context.sync();
 
+        // Try to load hidden property (may not be available in all API versions)
+        var hiddenSupported = true;
+        try {
+          for (var h = 0; h < slides.items.length; h++) {
+            slides.items[h].load("hidden");
+          }
+          await context.sync();
+        } catch (_) {
+          hiddenSupported = false;
+        }
+
         const slideList = [];
+        var visibleIndex = 0;
         for (let i = 0; i < slides.items.length; i++) {
           const slide = slides.items[i];
+
+          // Skip hidden slides
+          if (hiddenSupported && slide.hidden) continue;
+
           let thumbnail = null;
           try {
             const image = slide.getImageAsBase64();
             await context.sync();
-            thumbnail = image.value;
+            // Compress: 320px wide, JPEG quality 0.5
+            thumbnail = await compressImage(image.value, 320, 0.5);
           } catch (e) {
             // PowerPointApi 1.4 not available
           }
@@ -286,11 +328,14 @@
 
           slideList.push({
             id: slide.id,
-            index: i,
-            thumbnail,
+            index: visibleIndex,
             notes,
+            thumbnail,
           });
+          visibleIndex++;
         }
+
+        console.log("syncAllSlides:", slideList.length, "visible slides");
 
         if (client) {
           client.sendToGroup(

@@ -1,4 +1,4 @@
-const CACHE_NAME = "pointer-v6";
+const CACHE_NAME = "pointer-v7";
 const ASSETS = [
   "/",
   "/index.html",
