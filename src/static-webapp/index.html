@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pointer as a Service</title>
+  <link rel="stylesheet" href="css/site.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="favicon.ico" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#0078d4" />
+</head>
+<body class="host-page">
+  <!-- Header -->
+  <header class="header">
+    <span class="header-title">Pointer as a Service</span>
+    <span class="status-indicator">
+      <span class="status-dot"></span>
+      <span class="status-text">Connecting...</span>
+    </span>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <!-- QR Code -->
+    <section class="qr-section">
+      <div class="qr-container" id="qrcode"></div>
+      <p class="control-url" id="controlUrl"></p>
+    </section>
+
+    <!-- Action buttons -->
+    <section class="action-buttons">
+      <a id="openController" class="btn btn-primary" href="#" target="_blank">Open Controller</a>
+      <button id="refreshToken" class="btn">Refresh</button>
+    </section>
+
+    <!-- Theme switcher -->
+    <section>
+      <div class="theme-switcher">
+        <button class="theme-btn" data-theme="light" title="Light">☀️</button>
+        <button class="theme-btn" data-theme="dark" title="Dark">🌙</button>
+        <button class="theme-btn" data-theme="system" title="Follow System">🔄</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">&copy; 2026 Dino Wang</footer>
+
+  <!-- Hidden token -->
+  <input type="hidden" id="token" />
+
+  <!-- Dependencies -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@azure/web-pubsub-client@1.0.0/browser/web-pubsub-client.umd.min.js"></script>
+  <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/index.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>

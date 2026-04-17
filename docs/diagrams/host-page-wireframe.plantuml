@@ -1,0 +1,32 @@
+@startsalt
+title Host Page (Task Pane) - index.html
+{+
+  {/ <b>Pointer as a Service</b> }
+  {SI
+    Connected
+    ==
+    {+
+      {^"QR Code"
+        "                       "
+        "                       "
+        "      (180 x 180)      "
+        "                       "
+        "                       "
+      }
+    }
+    ==
+    "https://site.azurestaticapps.net/control?id=xYz"
+    --
+    { [ Open Controller ] | [ Refresh ] }
+    ==
+    <b>Theme</b>
+    {
+      (X) Light
+      ( ) Dark
+      ( ) Follow System
+    }
+    ==
+    "2026 Dino Wang"
+  }
+}
+@endsalt

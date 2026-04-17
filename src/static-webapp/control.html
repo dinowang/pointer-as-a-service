@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Controller - Pointer as a Service</title>
+  <link rel="stylesheet" href="css/site.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="favicon.ico" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0078d4" />
+</head>
+<body class="controller-page">
+  <!-- Header -->
+  <header class="header">
+    <span class="header-title" id="docName">Connecting...</span>
+    <span class="status-indicator">
+      <span class="status-dot"></span>
+      <span class="status-text"></span>
+    </span>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <!-- Current slide (swipe overlay) -->
+    <section class="slide-section" id="slideArea">
+      <div class="slide-current" id="currentSlide">
+        <span class="placeholder">Waiting for presentation...</span>
+      </div>
+      <span class="slide-hint">← swipe to navigate →</span>
+    </section>
+
+    <!-- Next slide preview -->
+    <section class="slide-next" id="nextSlideSection" style="display: none;">
+      <span class="slide-next-label">Next:</span>
+      <div class="slide-next-thumb" id="nextSlideThumb"></div>
+    </section>
+
+    <!-- Speaker notes (collapsible) -->
+    <section class="notes-section" id="notesSection">
+      <button class="notes-toggle" id="notesToggle">
+        <span>📝 Speaker Notes</span>
+        <span class="arrow">▼</span>
+      </button>
+      <div class="notes-content">
+        <div class="notes-text" id="notesText">(no notes)</div>
+      </div>
+    </section>
+
+    <!-- Navigation buttons -->
+    <nav class="nav-bar">
+      <button class="btn" id="btnFirst">⏮ First</button>
+      <button class="btn" id="btnPrev">◀ Prev</button>
+      <button class="btn btn-primary" id="btnNext">Next ▶</button>
+    </nav>
+
+    <!-- Bottom bar -->
+    <div class="bottom-bar">
+      <button class="btn" id="btnSlides">📋 Slides</button>
+      <div class="theme-switcher">
+        <button class="theme-btn" data-theme="light" title="Light">☀️</button>
+        <button class="theme-btn" data-theme="dark" title="Dark">🌙</button>
+        <button class="theme-btn" data-theme="system" title="Follow System">🔄</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Slides preview (bottom sheet) -->
+  <div class="slides-overlay" id="slidesOverlay"></div>
+  <div class="slides-sheet" id="slidesSheet">
+    <div class="slides-sheet-header">
+      <button class="btn" id="btnCloseSlides">← Back</button>
+      <h3>Slides Overview</h3>
+      <span></span>
+    </div>
+    <div class="slides-grid" id="slidesGrid"></div>
+  </div>
+
+  <!-- Hidden token -->
+  <input type="hidden" id="token" />
+
+  <!-- Dependencies -->
+  <script src="https://cdn.jsdelivr.net/npm/@azure/web-pubsub-client@1.0.0/browser/web-pubsub-client.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/control.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>

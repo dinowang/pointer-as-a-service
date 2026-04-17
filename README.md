@@ -23,12 +23,13 @@ https://docs.microsoft.com/en-us/office/dev/add-ins/testing/create-a-network-sha
 https://docs.microsoft.com/en-us/office/dev/add-ins/testing/sideload-an-office-add-in-on-ipad-and-mac 
 
 ```bash
-curl https://raw.githubusercontent.com/dinowang/pointer-as-a-service/master/manifest/pointer-as-a-service.xml -o ~/Library/Containers/com.microsoft.Powerpoint/Data/Documents/wef/pointer-as-a-service.xml
+# 請將 <OWNER> 替換為你的 GitHub 帳號或組織名稱
+curl https://raw.githubusercontent.com/<OWNER>/pointer-as-a-service/main/manifest/pointer-as-a-service.xml -o ~/Library/Containers/com.microsoft.Powerpoint/Data/Documents/wef/pointer-as-a-service.xml
 ```
 
 ### PowerPoint Online
 
-First, download Office Add-ins manifest from [here](https://raw.githubusercontent.com/dinowang/pointer-as-a-service/master/manifest/pointer-as-a-service.xml) and save to your local disk.
+First, download Office Add-ins manifest from [manifest/pointer-as-a-service.xml](manifest/pointer-as-a-service.xml) and save to your local disk.
 
 ![Install Addins for PowerPoint Online](./images/powerpoint-online-install-addins.png)
 
@@ -40,7 +41,7 @@ First, download Office Add-ins manifest from [here](https://raw.githubuserconten
 - ASP.NET Core SignalR
 - Office 365 PowerPoint
 
-[Build Instruction](source/README.md)
+[Build Instruction](src/aspnetcore/README.md)
 
 ## License
 

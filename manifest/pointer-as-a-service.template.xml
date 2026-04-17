@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp
+          xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+          xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+          xsi:type="TaskPaneApp">
+
+  <Id>b0b2f9f0-a0c7-4a4a-b84d-a2fc8c3c2796</Id>
+
+  <Version>2.0.0.0</Version>
+  <ProviderName>Dino Wang</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Pointer as a Service" />
+  <Description DefaultValue="Turn your smartphone into a wireless presentation remote. Control PowerPoint slides, view speaker notes, and preview slides from your phone."/>
+
+  <IconUrl DefaultValue="{{BASE_URL}}/assets/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="{{BASE_URL}}/assets/hi-res-icon.png"/>
+
+  <AppDomains>
+    <AppDomain>{{BASE_URL}}</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Presentation" />
+  </Hosts>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="{{BASE_URL}}/" />
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Presentation">
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="GetStarted.Title"/>
+            <Description resid="GetStarted.Description"/>
+            <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
+          </GetStarted>
+          <FunctionFile resid="FunctionFile.Url" />
+
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="PointerGroup">
+                <Label resid="Group.Label" />
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16" />
+                  <bt:Image size="32" resid="Icon.32x32" />
+                  <bt:Image size="80" resid="Icon.80x80" />
+                </Icon>
+
+                <Control xsi:type="Button" id="TaskpaneButton">
+                  <Label resid="TaskpaneButton.Label" />
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label" />
+                    <Description resid="TaskpaneButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16" />
+                    <bt:Image size="32" resid="Icon.32x32" />
+                    <bt:Image size="80" resid="Icon.80x80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>PointerTaskpane</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url" />
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16x16" DefaultValue="{{BASE_URL}}/assets/icon-16.png" />
+        <bt:Image id="Icon.32x32" DefaultValue="{{BASE_URL}}/assets/icon-32.png" />
+        <bt:Image id="Icon.80x80" DefaultValue="{{BASE_URL}}/assets/icon-80.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Taskpane.Url" DefaultValue="{{BASE_URL}}/" />
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://github.com/nicwang/pointer-as-a-service" />
+        <bt:Url id="FunctionFile.Url" DefaultValue="{{BASE_URL}}/" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Pointer as a Service" />
+        <bt:String id="Group.Label" DefaultValue="Pointer" />
+        <bt:String id="GetStarted.Title" DefaultValue="Pointer as a Service" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to open Pointer as a Service and turn your phone into a presentation remote." />
+        <bt:String id="GetStarted.Description" DefaultValue="Pointer as a Service add-in loaded successfully. Go to the HOME tab and click the 'Pointer as a Service' button to get started." />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+
+</OfficeApp>

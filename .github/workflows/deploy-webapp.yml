@@ -1,0 +1,64 @@
+name: Deploy Web App
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Static Web App URL (e.g., https://xxx.azurestaticapps.net)"
+        required: false
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - "src/static-webapp/**"
+      - "manifest/**"
+
+permissions:
+  contents: read
+  actions: write
+
+env:
+  STATIC_WEBAPP_DIR: src/static-webapp
+  MANIFEST_TEMPLATE: manifest/pointer-as-a-service.template.xml
+  TERRAFORM_DIR: src/terraform
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine Base URL
+        id: base-url
+        run: |
+          if [ -n "${{ inputs.base_url }}" ]; then
+            echo "url=${{ inputs.base_url }}" >> "$GITHUB_OUTPUT"
+          else
+            # Try to get from Terraform state artifact
+            echo "url=https://pointer-swa.azurestaticapps.net" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate Manifest
+        run: |
+          sed 's|{{BASE_URL}}|${{ steps.base-url.outputs.url }}|g' \
+            "${{ env.MANIFEST_TEMPLATE }}" > manifest/pointer-as-a-service.xml
+          echo "Generated manifest with base URL: ${{ steps.base-url.outputs.url }}"
+
+      - name: Upload Manifest Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: office-addin-manifest
+          path: manifest/pointer-as-a-service.xml
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: ${{ env.STATIC_WEBAPP_DIR }}
+          skip_app_build: true
+          skip_api_build: true

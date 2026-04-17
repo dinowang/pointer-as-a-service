@@ -537,3 +537,17 @@ healthchecksdb
 
 # Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
 
+# Terraform
+src/terraform/.terraform/
+src/terraform/terraform.tfstate
+src/terraform/terraform.tfstate.backup
+src/terraform/*.tfvars
+!src/terraform/terraform.tfvars.example
+
+# Azure Functions
+src/functions/local.settings.json
+src/functions/dist/
+
+# Prompt drafts
+.prompt/
+

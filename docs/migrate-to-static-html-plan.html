@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>migrate-to-static-html-plan</title>
+<script>
+// Apply theme early to prevent flash of wrong theme
+(function(){var t=localStorage.getItem('theme')||'auto';var d=t==='auto'?window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light':t;document.documentElement.setAttribute('data-theme',d)})();
+</script>
+<style>
+:root {
+  --sidebar-width: 300px;
+  --bg-sidebar: #f8f9fa;
+  --bg-main: #ffffff;
+  --border-color: #dee2e6;
+  --accent: #0078d4;
+  --accent-bg: #e8f4fd;
+  --text: #212529;
+  --text-muted: #6c757d;
+  --code-bg: #f4f4f4;
+  --code-block-bg: #1e1e1e;
+  --code-block-text: #d4d4d4;
+  --table-header-bg: #f1f3f5;
+  --table-stripe-bg: #fafbfc;
+  --blockquote-bg: #f8f9fa;
+  --blockquote-text: #495057;
+  --sidebar-hover: #e9ecef;
+  --sidebar-scrollbar: #ccc;
+  --lightbox-bg: rgba(0,0,0,0.7);
+  --copy-btn-bg: #f0f0f0;
+  --link-color: #0078d4;
+  --link-visited: #68217a;
+}
+[data-theme="dark"] {
+  --bg-sidebar: #1e1e1e;
+  --bg-main: #181818;
+  --border-color: #3a3a3a;
+  --accent: #4da6ff;
+  --accent-bg: #1a2e40;
+  --text: #d4d4d4;
+  --text-muted: #888;
+  --code-bg: #2d2d2d;
+  --code-block-bg: #0d0d0d;
+  --code-block-text: #d4d4d4;
+  --table-header-bg: #2a2a2a;
+  --table-stripe-bg: #1f1f1f;
+  --blockquote-bg: #222;
+  --blockquote-text: #aaa;
+  --sidebar-hover: #2a2a2a;
+  --sidebar-scrollbar: #555;
+  --lightbox-bg: rgba(0,0,0,0.85);
+  --copy-btn-bg: #333;
+  --link-color: #6cb6ff;
+  --link-visited: #d2a8ff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+  color: var(--text);
+  background: var(--bg-main);
+  line-height: 1.7;
+  display: flex;
+  min-height: 100vh;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* Sidebar */
+nav.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  padding: 20px 0 0;
+  z-index: 100;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+}
+nav.sidebar::-webkit-scrollbar { width: 0; }
+nav.sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-scrollbar); border-radius: 2px; }
+nav.sidebar .toc-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 16px 12px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 8px;
+}
+nav.sidebar a {
+  display: block;
+  text-decoration: none;
+  color: var(--text);
+  padding: 5px 16px;
+  font-size: 13px;
+  border-left: 3px solid transparent;
+  transition: all 0.15s ease;
+}
+nav.sidebar a.toc-h3 { padding-left: 32px; font-size: 12px; color: var(--text-muted); }
+nav.sidebar a:hover { background: var(--sidebar-hover); color: var(--accent); }
+nav.sidebar a.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+nav.sidebar a.active.toc-h3 { font-weight: 500; }
+.toc-links {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+.toc-links::-webkit-scrollbar { width: 4px; }
+.toc-links::-webkit-scrollbar-thumb { background: var(--sidebar-scrollbar); border-radius: 2px; }
+
+/* Main content */
+main.content {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  max-width: 900px;
+  padding: 40px 48px 80px;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+main.content h1 { font-size: 2em; margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid var(--accent); }
+main.content h2 { font-size: 1.5em; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); color: var(--accent); }
+main.content h3 { font-size: 1.2em; margin: 28px 0 12px; }
+main.content h4 { font-size: 1.05em; margin: 20px 0 8px; }
+main.content p { margin: 0 0 12px; }
+main.content ul, main.content ol { margin: 0 0 12px; padding-left: 28px; }
+main.content li { margin-bottom: 4px; }
+main.content hr { border: none; border-top: 1px solid var(--border-color); margin: 32px 0; }
+
+main.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 16px;
+  font-size: 14px;
+}
+main.content th, main.content td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+main.content th { background: var(--table-header-bg); font-weight: 600; }
+main.content tr:nth-child(even) { background: var(--table-stripe-bg); }
+
+main.content code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+main.content pre {
+  background: var(--code-block-bg);
+  color: var(--code-block-text);
+  padding: 16px 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 12px 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+main.content pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+main.content blockquote {
+  border-left: 4px solid var(--accent);
+  background: var(--blockquote-bg);
+  padding: 12px 16px;
+  margin: 12px 0 16px;
+  color: var(--blockquote-text);
+}
+main.content blockquote p { margin-bottom: 4px; }
+main.content blockquote p:last-child { margin-bottom: 0; }
+main.content img {
+  max-width: 100%;
+  height: auto;
+  /* border: 1px solid var(--border-color); */
+  border-radius: 6px;
+  margin: 8px 0;
+  /* box-shadow: 0 2px 8px rgba(0,0,0,0.08); */
+  cursor: zoom-in;
+}
+main.content a { color: var(--link-color); text-decoration: underline; text-underline-offset: 2px; }
+main.content a:visited { color: var(--link-visited); }
+main.content a:hover { color: var(--accent); }
+main.content input[type="checkbox"] { margin-right: 6px; }
+
+/* Inline code Copy button (popup 方式，不佔用文字流空間) */
+.inline-code-wrapper {
+  position: relative;
+  display: inline-block;
+}
+/* 用 ::after 偽元素向右延伸 hover 區域，讓滑鼠移向 Copy 按鈕時不會斷開 */
+.inline-code-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -50px;
+  width: 50px;
+  height: 100%;
+  pointer-events: none;
+}
+.inline-code-wrapper:hover::after {
+  pointer-events: auto;
+}
+.copy-btn {
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--copy-btn-bg);
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.copy-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.inline-copy {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(calc(100% + 4px), -50%);
+  opacity: 0;
+  pointer-events: none;
+  padding: 1px 5px;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+.inline-code-wrapper:hover .inline-copy {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Code block Copy button */
+.code-block-wrapper {
+  position: relative;
+  margin: 12px 0 16px;
+}
+.code-block-wrapper pre {
+  margin: 0;
+}
+.code-block-copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.12);
+  color: #aaa;
+  border-color: rgba(255,255,255,0.2);
+  z-index: 1;
+}
+.code-block-copy:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* Lightbox overlay */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--lightbox-bg);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.lightbox-overlay.active {
+  opacity: 1;
+}
+.lightbox-overlay img {
+  position: absolute;
+  border: none;
+  border-radius: 4px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  cursor: zoom-out;
+  transition: all 0.3s ease;
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+/* Sidebar toggle button (tablet / mobile landscape) */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 200;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-sidebar);
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  transition: background 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sidebar-toggle:hover { background: var(--sidebar-hover); }
+
+/* Sidebar backdrop overlay */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.35);
+  z-index: 99;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.sidebar-backdrop.active {
+  opacity: 1;
+}
+
+/* Theme switcher */
+.theme-switcher {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+}
+.theme-switcher-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.theme-options {
+  display: flex;
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+.theme-option {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 5px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  text-align: center;
+}
+.theme-option:hover { color: var(--text); }
+.theme-option.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 900px) and (min-width: 601px) {
+  .sidebar-toggle { display: block; }
+  nav.sidebar {
+    width: 220px;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: none;
+    z-index: 150;
+  }
+  nav.sidebar.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+  }
+  main.content {
+    margin-left: 0;
+    padding: 24px;
+    padding-top: 56px;
+  }
+}
+@media (max-width: 600px) {
+  nav.sidebar { display: none; }
+  .sidebar-toggle { display: none; }
+  main.content { margin-left: 0; padding: 16px 12px 48px; max-width: 100vw; }
+  main.content h1 { font-size: 1.5em; }
+  main.content h2 { font-size: 1.25em; margin: 28px 0 12px; }
+  main.content h3 { font-size: 1.1em; margin: 20px 0 8px; }
+  main.content table { font-size: 13px; }
+  main.content th, main.content td { padding: 6px 8px; }
+  .inline-copy { display: none; }
+}
+</style>
+</head>
+<body>
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="toc-title">目錄</div>
+  <div class="toc-links">
+  <a class="toc-h2" href="#背景" data-target="背景">背景</a>
+  <a class="toc-h2" href="#現行伺服器端功能盤點" data-target="現行伺服器端功能盤點">現行伺服器端功能盤點</a>
+  <a class="toc-h2" href="#signalr-的處理方案" data-target="signalr-的處理方案">SignalR 的處理方案</a>
+  <a class="toc-h3" href="#方案-aazure-signalr-serviceserverless-模式-azure-functions" data-target="方案-aazure-signalr-serviceserverless-模式-azure-functions">方案 A：Azure SignalR Service（Serverless 模式）+ Azure Functions</a>
+  <a class="toc-h3" href="#方案-a2azure-web-pubsubclient-protocol-azure-static-web-apps-推薦" data-target="方案-a2azure-web-pubsubclient-protocol-azure-static-web-apps-推薦">方案 A2：Azure Web PubSub（Client Protocol）+ Azure Static Web Apps ⭐ 推薦</a>
+  <a class="toc-h3" href="#方案-b自建-websocket-中繼服務minimal-api" data-target="方案-b自建-websocket-中繼服務minimal-api">方案 B：自建 WebSocket 中繼服務（Minimal API）</a>
+  <a class="toc-h3" href="#方案-cwebrtc-datachannelp2p" data-target="方案-cwebrtc-datachannelp2p">方案 C：WebRTC DataChannel（P2P）</a>
+  <a class="toc-h2" href="#github-pages-部署可行性" data-target="github-pages-部署可行性">GitHub Pages 部署可行性</a>
+  <a class="toc-h3" href="#可行的部分" data-target="可行的部分">✅ 可行的部分</a>
+  <a class="toc-h3" href="#需注意的限制" data-target="需注意的限制">⚠️ 需注意的限制</a>
+  <a class="toc-h3" href="#連線設定值保護" data-target="連線設定值保護">連線設定值保護</a>
+  <a class="toc-h2" href="#遷移計畫" data-target="遷移計畫">遷移計畫</a>
+  <a class="toc-h3" href="#phase-1建立靜態前端" data-target="phase-1建立靜態前端">Phase 1：建立靜態前端</a>
+  <a class="toc-h3" href="#phase-2建立-azure-static-web-apps-專案" data-target="phase-2建立-azure-static-web-apps-專案">Phase 2：建立 Azure Static Web Apps 專案</a>
+  <a class="toc-h3" href="#phase-3部署與驗證" data-target="phase-3部署與驗證">Phase 3：部署與驗證</a>
+  <a class="toc-h2" href="#建議" data-target="建議">建議</a>
+
+  </div>
+  <div class="theme-switcher">
+    <div class="theme-switcher-label">Theme</div>
+    <div class="theme-options">
+      <button class="theme-option" data-theme="light" title="Light">☀️ Light</button>
+      <button class="theme-option" data-theme="dark" title="Dark">🌙 Dark</button>
+      <button class="theme-option active" data-theme="auto" title="Follow device">🖥️ Auto</button>
+    </div>
+  </div>
+</nav>
+
+<main class="content">
+<h1 id="靜態-html-遷移可行性評估">靜態 HTML 遷移可行性評估</h1>
+<h2 id="背景">背景</h2>
+<p>現行架構使用 ASP.NET Core MVC 提供 Razor Views，搭配 Azure SignalR Service 進行即時通訊。評估是否可以用 <strong>Static HTML + JavaScript</strong> 取代 ASP.NET Core MVC，並部署至 <strong>GitHub Pages</strong>。</p>
+<h2 id="現行伺服器端功能盤點">現行伺服器端功能盤點</h2>
+<table>
+<thead><tr>
+<th>功能</th>
+<th>現行實作</th>
+<th>可否移至前端</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Token 生成（URL-safe Base64 GUID）</td>
+<td><span class="inline-code-wrapper"><code>IdService.cs</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span>（伺服器端）</td>
+<td>✅ JavaScript <span class="inline-code-wrapper"><code>crypto.randomUUID()</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 即可</td>
+</tr>
+<tr>
+<td>路由 <span class="inline-code-wrapper"><code>/{id?}</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> → 自動生成 Token 並 Redirect</td>
+<td><span class="inline-code-wrapper"><code>HomeController.Index</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></td>
+<td>✅ 前端 JS 判斷 URL 參數，無 ID 則自動生成</td>
+</tr>
+<tr>
+<td>路由 <span class="inline-code-wrapper"><code>/control/{id}</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> → 渲染遙控器頁面</td>
+<td><span class="inline-code-wrapper"><code>HomeController.Control</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></td>
+<td>✅ 靜態 HTML + JS 從 URL 讀取 ID</td>
+</tr>
+<tr>
+<td><span class="inline-code-wrapper"><code>/refresh</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> API → 生成新 Token 並回傳 JSON</td>
+<td><span class="inline-code-wrapper"><code>HomeController.Refresh</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></td>
+<td>✅ 前端 JS 直接生成，不需 API</td>
+</tr>
+<tr>
+<td>Theme Cookie 讀取 → 伺服器端 Razor 渲染</td>
+<td><span class="inline-code-wrapper"><code>_Layout.cshtml</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></td>
+<td>✅ 前端 JS 讀取 Cookie/localStorage</td>
+</tr>
+<tr>
+<td>SignalR Hub（群組管理、指令轉發）</td>
+<td><span class="inline-code-wrapper"><code>RemoteHub.cs</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></td>
+<td>⚠️ 需要後端 — 見下方分析</td>
+</tr>
+</tbody></table>
+<p><strong>結論</strong>：除 SignalR Hub 外，所有伺服器端邏輯都可移至前端 JavaScript。</p>
+<h2 id="signalr-的處理方案">SignalR 的處理方案</h2>
+<p>SignalR Hub 是唯一無法純前端實現的部分，以下為三個可行方案：</p>
+<h3 id="方案-aazure-signalr-serviceserverless-模式-azure-functions">方案 A：Azure SignalR Service（Serverless 模式）+ Azure Functions</h3>
+<p>GitHub Pages 託管靜態前端，Azure Functions 提供 SignalR negotiate 端點與訊息路由。</p>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>┌─────────────┐     ┌──────────────────┐     ┌─────────────────────┐
+│ GitHub Pages │────▶│ Azure Functions   │────▶│ Azure SignalR Service│
+│ (靜態 HTML)  │     │ (negotiate + Hub) │     │ (Serverless 模式)    │
+└─────────────┘     └──────────────────┘     └─────────────────────┘</code></pre></div>
+<p><strong>Azure Functions 需實作</strong>：</p>
+<ul>
+<li><span class="inline-code-wrapper"><code>negotiate</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> — 回傳 SignalR 連線資訊（access token + URL）</li>
+<li><span class="inline-code-wrapper"><code>JoinGroup</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> / <span class="inline-code-wrapper"><code>LeaveGroup</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> — 群組管理（透過 SignalR Service REST API）</li>
+<li><span class="inline-code-wrapper"><code>SendCommand</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> — 接收 Controller 指令，轉發至群組</li>
+</ul>
+<p><strong>優點</strong>：</p>
+<ul>
+<li>前端完全靜態，可部署於 GitHub Pages</li>
+<li>Azure Functions 消費方案有免費額度（每月 100 萬次呼叫）</li>
+<li>Azure SignalR Service 免費層（每日 20,000 訊息）已足夠</li>
+</ul>
+<p><strong>限制</strong>：</p>
+<ul>
+<li>前端需引入 SignalR JavaScript SDK（~50KB）</li>
+<li>仍需 Azure Functions 作為後端（非純靜態）</li>
+<li>需設定 CORS 允許 GitHub Pages 網域</li>
+<li>Azure Functions 消費方案有冷啟動延遲（~1-3 秒）</li>
+</ul>
+<h3 id="方案-a2azure-web-pubsubclient-protocol-azure-static-web-apps-推薦">方案 A2：Azure Web PubSub（Client Protocol）+ Azure Static Web Apps ⭐ 推薦</h3>
+<p>利用 Azure Web PubSub 的 <strong>Client Protocol（<span class="inline-code-wrapper"><code>json.webpubsub.azure.v1</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span>）</strong>，客戶端可直接加入群組、發送群組訊息，<strong>伺服器完全不參與訊息路由</strong>。後端僅需一個 <span class="inline-code-wrapper"><code>negotiate</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 端點產生 access token。</p>
+<p>搭配 <strong>Azure Static Web Apps</strong>，前端與 API 合併為同一個 Git Repository，<span class="inline-code-wrapper"><code>git push</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 一次即同時部署靜態檔案與 API。開發體驗上幾乎等同「沒有獨立的 Azure Functions」。</p>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>┌──────────────────────────────────────┐
+│     Azure Static Web Apps            │
+│  ┌────────────┐  ┌────────────────┐  │     ┌───────────────────┐
+│  │ 靜態 HTML   │  │ /api/negotiate │──┼────▶│ Azure Web PubSub  │
+│  │ (前端)      │  │ (內建 Function)│  │     │ (Client Protocol) │
+│  └────────────┘  └────────────────┘  │     └───────────────────┘
+└──────────────────────────────────────┘           ▲
+                                                   │ 直接 WebSocket
+                                            ┌──────┴──────┐
+                                            │ Host / Ctrl  │
+                                            │ (瀏覽器客戶端)│
+                                            └─────────────┘</code></pre></div>
+<p><strong>關鍵：Client Protocol 讓客戶端自主操作群組</strong></p>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>// 前端 — 取得 negotiate URL 後直接連線
+const res = await fetch(&#039;/api/negotiate&#039;);
+const { url } = await res.json();
+
+const client = new WebPubSubClient(url);
+await client.start();
+
+// 客戶端直接加入群組 — 不經伺服器
+await client.joinGroup(token);
+
+// 客戶端直接發送群組訊息 — 不經伺服器
+await client.sendToGroup(token, { type: &#039;N ext&#039; }, &#039;json&#039;);
+
+// 接收群組訊息
+client.on(&#039;group-message&#039;, (e) =&gt; {
+  const cmd = e.message.data;
+  // 處理 First / Prev / Next 等指令
+});</code></pre></div>
+<p><strong>Azure Functions 僅需 1 個函式</strong>：</p>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>// /api/negotiate — 產生帶有群組權限的 client access URL
+const { WebPubSubServiceClient } = require(&#039;@azure/web-pubsub&#039;);
+const client = new WebPubSubServiceClient(
+  process.env.WEB_PUBSUB_CONNECTION_STRING, &#039;pointer&#039;
+);
+
+module.exports = async function (context, req) {
+  const token = req.query.id || crypto.randomUUID();
+  const clientUrl = await client.getClientAccessUrl({
+    roles: [
+      `webpubsub.joinLeaveGroup.${token}`,
+      `webpubsub.sendToGroup.${token}`
+    ]
+  });
+  context.res = { body: { url: clientUrl, token } };
+};</code></pre></div>
+<p><strong>與方案 A（原 Azure Functions 3-4 個函式）的差異</strong>：</p>
+<table>
+<thead><tr>
+<th>項目</th>
+<th>方案 A（舊）</th>
+<th>方案 A2（新）</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Azure Functions 數量</td>
+<td>3-4 個（negotiate + 訊息路由 + 事件處理）</td>
+<td><strong>1 個</strong>（僅 negotiate）</td>
+</tr>
+<tr>
+<td>訊息路由</td>
+<td>伺服器轉發</td>
+<td><strong>客戶端直接群組通訊</strong></td>
+</tr>
+<tr>
+<td>群組管理</td>
+<td>伺服器 REST API</td>
+<td><strong>客戶端 Client Protocol</strong></td>
+</tr>
+<tr>
+<td>部署方式</td>
+<td>前端 + Functions 分開部署</td>
+<td><strong>Azure Static Web Apps 一次部署</strong></td>
+</tr>
+<tr>
+<td>獨立 Function App</td>
+<td>需要</td>
+<td><strong>不需要</strong>（內建於 Static Web Apps）</td>
+</tr>
+</tbody></table>
+<p><strong>優點</strong>：</p>
+<ul>
+<li><strong>近乎無後端</strong>：僅 1 個 negotiate 函式，且內嵌於 Azure Static Web Apps，無獨立 Function App</li>
+<li><span class="inline-code-wrapper"><code>git push</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 一次部署前端 + API，與 GitHub Pages 體驗相當</li>
+<li>客戶端直接透過 Web PubSub 通訊，伺服器不在訊息路徑上</li>
+<li>免費層：Static Web Apps 免費 + Web PubSub 免費層 = <strong>$0</strong></li>
+<li>前端可使用官方 <span class="inline-code-wrapper"><code>@azure/web-pubsub-client</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> SDK（~15KB gzipped），內建自動重連</li>
+</ul>
+<p><strong>限制</strong>：</p>
+<ul>
+<li>從 GitHub Pages 改為 Azure Static Web Apps（同為靜態託管，但換了平台）</li>
+<li>Client Protocol 需使用 <span class="inline-code-wrapper"><code>json.webpubsub.azure.v1</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 子協定</li>
+<li>綁定 Azure 平台</li>
+</ul>
+<p><strong>成本估算</strong>：</p>
+<table>
+<thead><tr>
+<th>資源</th>
+<th>方案</th>
+<th>預估月成本</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Azure Static Web Apps</td>
+<td>免費方案（含內建 API）</td>
+<td>$0</td>
+</tr>
+<tr>
+<td>Azure Web PubSub</td>
+<td>免費層</td>
+<td>$0</td>
+</tr>
+<tr>
+<td><strong>合計</strong></td>
+<td><strong>$0</strong></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>為何不能完全消除伺服器端？</strong></p>
+<p>Access token 必須由持有 connection string 的可信端點產生。但透過 Azure Static Web Apps 的內建 API，這個端點與靜態前端合為一體，開發與部署體驗上等同純靜態。</p>
+</blockquote>
+<h3 id="方案-b自建-websocket-中繼服務minimal-api">方案 B：自建 WebSocket 中繼服務（Minimal API）</h3>
+<p>以極簡的 .NET Minimal API 或 Node.js 提供 WebSocket 中繼，前端靜態檔案可部署於 GitHub Pages 或與 API 同主機。</p>
+<p><strong>優點</strong>：</p>
+<ul>
+<li>零 Azure 依賴</li>
+<li>完全自主掌控</li>
+</ul>
+<p><strong>限制</strong>：</p>
+<ul>
+<li>需維運一台伺服器（VPS、Container 等）</li>
+<li>需自行實作群組管理與重連</li>
+<li>GitHub Pages 前端需跨域連接至 WebSocket 伺服器</li>
+</ul>
+<h3 id="方案-cwebrtc-datachannelp2p">方案 C：WebRTC DataChannel（P2P）</h3>
+<p>前端透過 WebRTC 建立點對點連線，僅需極簡的 Signaling Server 交換 SDP。</p>
+<p><strong>優點</strong>：</p>
+<ul>
+<li>連線建立後完全 P2P，無伺服器中繼</li>
+<li>Signaling 可用 GitHub Gist 或其他靜態方式模擬（實驗性）</li>
+</ul>
+<p><strong>限制</strong>：</p>
+<ul>
+<li>Office Add-in WebView 的 WebRTC 支援不穩定</li>
+<li>仍需 Signaling Server（無法完全 GitHub Pages only）</li>
+<li>NAT 穿越問題</li>
+</ul>
+<h2 id="github-pages-部署可行性">GitHub Pages 部署可行性</h2>
+<h3 id="可行的部分">✅ 可行的部分</h3>
+<ul>
+<li>靜態 HTML/CSS/JavaScript 檔案託管</li>
+<li>自訂網域（CNAME）</li>
+<li>HTTPS 自動支援</li>
+<li>SPA 路由（透過 <span class="inline-code-wrapper"><code>404.html</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> hack 或 hash-based routing）</li>
+</ul>
+<h3 id="需注意的限制">⚠️ 需注意的限制</h3>
+<table>
+<thead><tr>
+<th>限制</th>
+<th>影響</th>
+<th>解決方式</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>無伺服器端程式碼</td>
+<td>無法直接執行 SignalR Hub</td>
+<td>搭配 Azure Functions（方案 A / A2）</td>
+</tr>
+<tr>
+<td>無 URL Rewrite</td>
+<td><span class="inline-code-wrapper"><code>/control/{id}</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 路由無法直接使用</td>
+<td>改用 hash routing：<span class="inline-code-wrapper"><code>/#/control/{id}</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 或 <span class="inline-code-wrapper"><code>control.html?id={id}</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></td>
+</tr>
+<tr>
+<td>單一 Repository 限制</td>
+<td>每個帳號僅一個 <span class="inline-code-wrapper"><code>username.github.io</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></td>
+<td>使用 Project Pages（<span class="inline-code-wrapper"><code>repo/gh-pages</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 分支）</td>
+</tr>
+<tr>
+<td>頻寬限制</td>
+<td>100GB/月</td>
+<td>簡報遙控場景完全足夠</td>
+</tr>
+</tbody></table>
+<h3 id="連線設定值保護">連線設定值保護</h3>
+<blockquote>
+<p><strong>SignalR / Web PubSub 設定值可不可以保留在部署於 GitHub Pages 的靜態檔案內？</strong></p>
+</blockquote>
+<p><strong>不可以直接放入前端程式碼</strong>。無論是 Azure SignalR Service 或 Azure Web PubSub，connection string 都包含 access key，暴露在前端會導致安全風險。</p>
+<p><strong>正確做法</strong>：</p>
+<ul>
+<li>Connection string 存放於 <strong>Azure Functions 的環境變數</strong>（Application Settings）</li>
+<li>前端僅呼叫 Azure Functions 的 <span class="inline-code-wrapper"><code>negotiate</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 端點取得臨時 access token</li>
+<li>臨時 token 有時效性，過期後需重新 negotiate</li>
+</ul>
+<p><strong>Azure Web PubSub 範例（方案 A2 — 推薦）</strong>：</p>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>// 前端 — 呼叫 negotiate 取得 WebSocket 連線 URL
+const res = await fetch(&#039;https://your-functions.azurewebsites.net/api/negotiate&#039;);
+const { url } = await res.json();
+
+// 原生 WebSocket — 無需額外 SDK
+const ws = new WebSocket(url);
+ws.onopen = () =&gt; console.log(&#039;Connected&#039;);
+ws.onmessage = (e) =&gt; {
+  const msg = JSON.parse(e.data);
+  // 處理 First / Prev / Next 等指令
+};</code></pre></div>
+<p><strong>Azure SignalR 範例（方案 A）</strong>：</p>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>// 前端 — 需引入 SignalR SDK
+const res = await fetch(&#039;https://your-functions.azurewebsites.net/api/negotiate&#039;);
+const { url, accessToken } = await res.json();
+
+const connection = new signalR.HubConnectionBuilder()
+  .withUrl(url, { accessTokenFactory: () =&gt; accessToken })
+  .withAutomaticReconnect()
+  .build();</code></pre></div>
+<h2 id="遷移計畫">遷移計畫</h2>
+<h3 id="phase-1建立靜態前端">Phase 1：建立靜態前端</h3>
+<ol>
+<li>將 Razor Views 轉換為靜態 HTML</li>
+</ol>
+<ul>
+<ul>
+<li><span class="inline-code-wrapper"><code>Index.cshtml</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> → <span class="inline-code-wrapper"><code>index.html</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span>（Host 端 / Office Add-in 面板）</li>
+<li><span class="inline-code-wrapper"><code>Control.cshtml</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> → <span class="inline-code-wrapper"><code>control.html</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span>（Controller 端 / 手機遙控器）</li>
+<li><span class="inline-code-wrapper"><code>_Layout.cshtml</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> → 共用 HTML 模板（直接內嵌或使用 JS 組裝）</li>
+</ul>
+</ul>
+<ol>
+<li>Token 生成改用 JavaScript：</li>
+</ol>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>   function generateToken() {
+     return crypto.randomUUID().replace(/-/g, &#039;&#039;);
+   }</code></pre></div>
+<ol>
+<li>路由改用 URL 參數：</li>
+</ol>
+<ul>
+<ul>
+<li>Host：<span class="inline-code-wrapper"><code>index.html</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> → 自動生成 Token，顯示 <span class="inline-code-wrapper"><code>control.html?id={token}</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 的 QR Code</li>
+<li>Controller：<span class="inline-code-wrapper"><code>control.html?id={token}</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> → 從 URL 讀取 Token</li>
+</ul>
+</ul>
+<ol>
+<li>Theme 切換改用 <span class="inline-code-wrapper"><code>localStorage</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></li>
+</ol>
+<h3 id="phase-2建立-azure-static-web-apps-專案">Phase 2：建立 Azure Static Web Apps 專案</h3>
+<ol>
+<li>建立 Azure Static Web Apps 專案，目錄結構：</li>
+</ol>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>   /
+   ├── index.html          # Host 端（Office Add-in）
+   ├── control.html        # Controller 端（手機）
+   ├── css/
+   ├── js/
+   └── api/
+       └── negotiate/
+           └── index.js    # 僅此一個 Function</code></pre></div>
+<ol>
+<li>實作 <span class="inline-code-wrapper"><code>api/negotiate</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 函式 — Web PubSub Client Protocol 連線協商</li>
+<li>將 Web PubSub connection string 存入 Azure Static Web Apps Application Settings</li>
+</ol>
+<h3 id="phase-3部署與驗證">Phase 3：部署與驗證</h3>
+<ol>
+<li>連接 GitHub Repository 至 Azure Static Web Apps（自動產生 GitHub Actions workflow）</li>
+<li><span class="inline-code-wrapper"><code>git push</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 即同時部署前端 + API</li>
+<li>更新 Office Add-in manifest 中的 URL 指向 GitHub Pages</li>
+<li>端對端測試：Office Add-in ↔ Azure Functions ↔ Web PubSub ↔ 手機 Controller</li>
+</ol>
+<h2 id="建議">建議</h2>
+<p><strong>推薦方案 A2（Azure Web PubSub Client Protocol + Azure Static Web Apps）</strong>：</p>
+<ul>
+<li><strong>近乎無後端</strong>：僅 1 個 negotiate 函式，內嵌於 Static Web Apps，無獨立 Function App</li>
+<li>客戶端透過 Client Protocol 直接操作群組，伺服器不在訊息路徑上</li>
+<li><span class="inline-code-wrapper"><code>git push</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 一次部署前端 + API，開發體驗等同純靜態站</li>
+<li>預估月成本 $0（全部在免費額度內）</li>
+<li>前端使用官方 <span class="inline-code-wrapper"><code>@azure/web-pubsub-client</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> SDK，內建自動重連</li>
+</ul>
+<p>若偏好 GitHub Pages 部署（而非 Azure Static Web Apps），可搭配獨立 Azure Functions 消費方案（仍僅需 1 個 negotiate 函式），成本同樣 $0。</p>
+<p>完全消除伺服器端在技術上不可行（access token 需由持有 connection string 的可信端點產生），但透過 Azure Static Web Apps 的內建 API，這個端點已與前端融為一體。</p>
+
+</main>
+
+<script>
+// Copy 功能
+function copyCode(btn) {
+  const code = btn.parentElement.querySelector('code');
+  navigator.clipboard.writeText(code.textContent).then(function() {
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+function copyInlineCode(btn) {
+  const code = btn.parentElement.querySelector('code');
+  navigator.clipboard.writeText(code.textContent).then(function() {
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+
+// Lightbox 功能
+function openLightbox(img) {
+  var overlay = document.createElement('div');
+  overlay.className = 'lightbox-overlay';
+  var rect = img.getBoundingClientRect();
+  var clone = document.createElement('img');
+  clone.src = img.src;
+  clone.alt = img.alt;
+  // 起始位置：圖片原始位置
+  clone.style.top = rect.top + 'px';
+  clone.style.left = rect.left + 'px';
+  clone.style.width = rect.width + 'px';
+  clone.style.height = rect.height + 'px';
+  overlay.appendChild(clone);
+  document.body.appendChild(overlay);
+  // 觸發放大動畫
+  requestAnimationFrame(function() {
+    overlay.classList.add('active');
+    // 計算置中目標位置
+    var vw = window.innerWidth * 0.9;
+    var vh = window.innerHeight * 0.9;
+    var naturalW = img.naturalWidth || rect.width;
+    var naturalH = img.naturalHeight || rect.height;
+    var scale = Math.min(vw / naturalW, vh / naturalH, 1);
+    var finalW = naturalW * scale;
+    var finalH = naturalH * scale;
+    var finalTop = (window.innerHeight - finalH) / 2;
+    var finalLeft = (window.innerWidth - finalW) / 2;
+    clone.style.top = finalTop + 'px';
+    clone.style.left = finalLeft + 'px';
+    clone.style.width = finalW + 'px';
+    clone.style.height = finalH + 'px';
+  });
+  // 關閉 lightbox：縮回原始位置
+  function closeLightbox() {
+    var currentRect = img.getBoundingClientRect();
+    clone.style.top = currentRect.top + 'px';
+    clone.style.left = currentRect.left + 'px';
+    clone.style.width = currentRect.width + 'px';
+    clone.style.height = currentRect.height + 'px';
+    overlay.classList.remove('active');
+    setTimeout(function() {
+      overlay.remove();
+    }, 300);
+  }
+  overlay.addEventListener('click', closeLightbox);
+}
+
+// Sidebar toggle (tablet / mobile landscape)
+(function() {
+  var toggle = document.getElementById('sidebarToggle');
+  var sidebar = document.getElementById('sidebar');
+  var backdrop = document.getElementById('sidebarBackdrop');
+
+  function openSidebar() {
+    sidebar.classList.add('sidebar-open');
+    backdrop.style.display = 'block';
+    requestAnimationFrame(function() { backdrop.classList.add('active'); });
+    toggle.textContent = '✕';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('sidebar-open');
+    backdrop.classList.remove('active');
+    setTimeout(function() { backdrop.style.display = 'none'; }, 250);
+    toggle.textContent = '☰';
+  }
+
+  toggle.addEventListener('click', function() {
+    if (sidebar.classList.contains('sidebar-open')) { closeSidebar(); }
+    else { openSidebar(); }
+  });
+  backdrop.addEventListener('click', closeSidebar);
+
+  // Close sidebar when a TOC link is clicked (saves one tap)
+  sidebar.querySelectorAll('a[data-target]').forEach(function(link) {
+    link.addEventListener('click', function() {
+      if (sidebar.classList.contains('sidebar-open')) { closeSidebar(); }
+    });
+  });
+})();
+
+// Theme switcher
+(function() {
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll('.theme-option');
+  var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function applyTheme(mode) {
+    if (mode === 'auto') {
+      root.setAttribute('data-theme', mediaQuery.matches ? 'dark' : 'light');
+    } else {
+      root.setAttribute('data-theme', mode);
+    }
+    buttons.forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-theme') === mode);
+    });
+  }
+
+  // Restore saved preference or default to auto
+  var saved = localStorage.getItem('theme') || 'auto';
+  applyTheme(saved);
+
+  buttons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var mode = btn.getAttribute('data-theme');
+      localStorage.setItem('theme', mode);
+      applyTheme(mode);
+    });
+  });
+
+  // Listen for device theme changes when in auto mode
+  mediaQuery.addEventListener('change', function() {
+    if ((localStorage.getItem('theme') || 'auto') === 'auto') {
+      applyTheme('auto');
+    }
+  });
+})();
+
+// Scroll Spy
+(function() {
+  const links = document.querySelectorAll('nav.sidebar a[data-target]');
+  const sections = [];
+  links.forEach(link => {
+    const id = link.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if (el) sections.push({ link, el });
+  });
+
+  function updateActive() {
+    let current = null;
+    const scrollY = window.scrollY + 60;
+    for (let i = sections.length - 1; i >= 0; i--) {
+      if (sections[i].el.offsetTop <= scrollY) {
+        current = sections[i];
+        break;
+      }
+    }
+    links.forEach(l => l.classList.remove('active'));
+    if (current) {
+      current.link.classList.add('active');
+      current.link.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => { updateActive(); ticking = false; });
+      ticking = true;
+    }
+  });
+  updateActive();
+})();
+</script>
+</body>
+</html>

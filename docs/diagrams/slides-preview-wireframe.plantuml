@@ -1,0 +1,66 @@
+@startsalt
+title Slides Preview (Bottom Sheet) - control.html
+{+
+  { Back | . | <b>Slides Overview</b> | . | . }
+  ==
+  {SI
+    {
+      {^"Slide 1"
+        "         "
+        "  thumb  "
+        "         "
+      }
+      |
+      {^"Slide 2"
+        "         "
+        "  thumb  "
+        "         "
+      }
+      |
+      {^"Slide 3 *"
+        "         "
+        "  thumb  "
+        "         "
+      }
+    }
+    --
+    {
+      {^"Slide 4"
+        "         "
+        "  thumb  "
+        "         "
+      }
+      |
+      {^"Slide 5"
+        "         "
+        "  thumb  "
+        "         "
+      }
+      |
+      {^"Slide 6"
+        "         "
+        "  thumb  "
+        "         "
+      }
+    }
+    --
+    {
+      {^"Slide 7"
+        "         "
+        "  thumb  "
+        "         "
+      }
+      |
+      {^"Slide 8"
+        "         "
+        "  thumb  "
+        "         "
+      }
+      |
+      .
+    }
+  }
+  ==
+  "* = current slide"
+}
+@endsalt

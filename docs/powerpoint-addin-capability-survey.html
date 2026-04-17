@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>powerpoint-addin-capability-survey</title>
+<script>
+// Apply theme early to prevent flash of wrong theme
+(function(){var t=localStorage.getItem('theme')||'auto';var d=t==='auto'?window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light':t;document.documentElement.setAttribute('data-theme',d)})();
+</script>
+<style>
+:root {
+  --sidebar-width: 300px;
+  --bg-sidebar: #f8f9fa;
+  --bg-main: #ffffff;
+  --border-color: #dee2e6;
+  --accent: #0078d4;
+  --accent-bg: #e8f4fd;
+  --text: #212529;
+  --text-muted: #6c757d;
+  --code-bg: #f4f4f4;
+  --code-block-bg: #1e1e1e;
+  --code-block-text: #d4d4d4;
+  --table-header-bg: #f1f3f5;
+  --table-stripe-bg: #fafbfc;
+  --blockquote-bg: #f8f9fa;
+  --blockquote-text: #495057;
+  --sidebar-hover: #e9ecef;
+  --sidebar-scrollbar: #ccc;
+  --lightbox-bg: rgba(0,0,0,0.7);
+  --copy-btn-bg: #f0f0f0;
+  --link-color: #0078d4;
+  --link-visited: #68217a;
+}
+[data-theme="dark"] {
+  --bg-sidebar: #1e1e1e;
+  --bg-main: #181818;
+  --border-color: #3a3a3a;
+  --accent: #4da6ff;
+  --accent-bg: #1a2e40;
+  --text: #d4d4d4;
+  --text-muted: #888;
+  --code-bg: #2d2d2d;
+  --code-block-bg: #0d0d0d;
+  --code-block-text: #d4d4d4;
+  --table-header-bg: #2a2a2a;
+  --table-stripe-bg: #1f1f1f;
+  --blockquote-bg: #222;
+  --blockquote-text: #aaa;
+  --sidebar-hover: #2a2a2a;
+  --sidebar-scrollbar: #555;
+  --lightbox-bg: rgba(0,0,0,0.85);
+  --copy-btn-bg: #333;
+  --link-color: #6cb6ff;
+  --link-visited: #d2a8ff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+  color: var(--text);
+  background: var(--bg-main);
+  line-height: 1.7;
+  display: flex;
+  min-height: 100vh;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* Sidebar */
+nav.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  padding: 20px 0 0;
+  z-index: 100;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+}
+nav.sidebar::-webkit-scrollbar { width: 0; }
+nav.sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-scrollbar); border-radius: 2px; }
+nav.sidebar .toc-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 16px 12px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 8px;
+}
+nav.sidebar a {
+  display: block;
+  text-decoration: none;
+  color: var(--text);
+  padding: 5px 16px;
+  font-size: 13px;
+  border-left: 3px solid transparent;
+  transition: all 0.15s ease;
+}
+nav.sidebar a.toc-h3 { padding-left: 32px; font-size: 12px; color: var(--text-muted); }
+nav.sidebar a:hover { background: var(--sidebar-hover); color: var(--accent); }
+nav.sidebar a.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+nav.sidebar a.active.toc-h3 { font-weight: 500; }
+.toc-links {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+.toc-links::-webkit-scrollbar { width: 4px; }
+.toc-links::-webkit-scrollbar-thumb { background: var(--sidebar-scrollbar); border-radius: 2px; }
+
+/* Main content */
+main.content {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  max-width: 900px;
+  padding: 40px 48px 80px;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+main.content h1 { font-size: 2em; margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid var(--accent); }
+main.content h2 { font-size: 1.5em; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); color: var(--accent); }
+main.content h3 { font-size: 1.2em; margin: 28px 0 12px; }
+main.content h4 { font-size: 1.05em; margin: 20px 0 8px; }
+main.content p { margin: 0 0 12px; }
+main.content ul, main.content ol { margin: 0 0 12px; padding-left: 28px; }
+main.content li { margin-bottom: 4px; }
+main.content hr { border: none; border-top: 1px solid var(--border-color); margin: 32px 0; }
+
+main.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 16px;
+  font-size: 14px;
+}
+main.content th, main.content td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+main.content th { background: var(--table-header-bg); font-weight: 600; }
+main.content tr:nth-child(even) { background: var(--table-stripe-bg); }
+
+main.content code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+main.content pre {
+  background: var(--code-block-bg);
+  color: var(--code-block-text);
+  padding: 16px 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 12px 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+main.content pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+main.content blockquote {
+  border-left: 4px solid var(--accent);
+  background: var(--blockquote-bg);
+  padding: 12px 16px;
+  margin: 12px 0 16px;
+  color: var(--blockquote-text);
+}
+main.content blockquote p { margin-bottom: 4px; }
+main.content blockquote p:last-child { margin-bottom: 0; }
+main.content img {
+  max-width: 100%;
+  height: auto;
+  /* border: 1px solid var(--border-color); */
+  border-radius: 6px;
+  margin: 8px 0;
+  /* box-shadow: 0 2px 8px rgba(0,0,0,0.08); */
+  cursor: zoom-in;
+}
+main.content a { color: var(--link-color); text-decoration: underline; text-underline-offset: 2px; }
+main.content a:visited { color: var(--link-visited); }
+main.content a:hover { color: var(--accent); }
+main.content input[type="checkbox"] { margin-right: 6px; }
+
+/* Inline code Copy button (popup 方式，不佔用文字流空間) */
+.inline-code-wrapper {
+  position: relative;
+  display: inline-block;
+}
+/* 用 ::after 偽元素向右延伸 hover 區域，讓滑鼠移向 Copy 按鈕時不會斷開 */
+.inline-code-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -50px;
+  width: 50px;
+  height: 100%;
+  pointer-events: none;
+}
+.inline-code-wrapper:hover::after {
+  pointer-events: auto;
+}
+.copy-btn {
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--copy-btn-bg);
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.copy-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.inline-copy {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(calc(100% + 4px), -50%);
+  opacity: 0;
+  pointer-events: none;
+  padding: 1px 5px;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+.inline-code-wrapper:hover .inline-copy {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Code block Copy button */
+.code-block-wrapper {
+  position: relative;
+  margin: 12px 0 16px;
+}
+.code-block-wrapper pre {
+  margin: 0;
+}
+.code-block-copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.12);
+  color: #aaa;
+  border-color: rgba(255,255,255,0.2);
+  z-index: 1;
+}
+.code-block-copy:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* Lightbox overlay */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--lightbox-bg);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.lightbox-overlay.active {
+  opacity: 1;
+}
+.lightbox-overlay img {
+  position: absolute;
+  border: none;
+  border-radius: 4px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  cursor: zoom-out;
+  transition: all 0.3s ease;
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+/* Sidebar toggle button (tablet / mobile landscape) */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 200;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-sidebar);
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  transition: background 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sidebar-toggle:hover { background: var(--sidebar-hover); }
+
+/* Sidebar backdrop overlay */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.35);
+  z-index: 99;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.sidebar-backdrop.active {
+  opacity: 1;
+}
+
+/* Theme switcher */
+.theme-switcher {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+}
+.theme-switcher-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.theme-options {
+  display: flex;
+  background: var(--code-bg);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+.theme-option {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 5px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  text-align: center;
+}
+.theme-option:hover { color: var(--text); }
+.theme-option.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 900px) and (min-width: 601px) {
+  .sidebar-toggle { display: block; }
+  nav.sidebar {
+    width: 220px;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: none;
+    z-index: 150;
+  }
+  nav.sidebar.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+  }
+  main.content {
+    margin-left: 0;
+    padding: 24px;
+    padding-top: 56px;
+  }
+}
+@media (max-width: 600px) {
+  nav.sidebar { display: none; }
+  .sidebar-toggle { display: none; }
+  main.content { margin-left: 0; padding: 16px 12px 48px; max-width: 100vw; }
+  main.content h1 { font-size: 1.5em; }
+  main.content h2 { font-size: 1.25em; margin: 28px 0 12px; }
+  main.content h3 { font-size: 1.1em; margin: 20px 0 8px; }
+  main.content table { font-size: 13px; }
+  main.content th, main.content td { padding: 6px 8px; }
+  .inline-copy { display: none; }
+}
+</style>
+</head>
+<body>
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="toc-title">目錄</div>
+  <div class="toc-links">
+  <a class="toc-h2" href="#目標" data-target="目標">目標</a>
+  <a class="toc-h2" href="#功能可行性總覽" data-target="功能可行性總覽">功能可行性總覽</a>
+  <a class="toc-h2" href="#詳細分析" data-target="詳細分析">詳細分析</a>
+  <a class="toc-h3" href="#1-使用-pwa-實現-controller" data-target="1-使用-pwa-實現-controller">1. 使用 PWA 實現 Controller</a>
+  <a class="toc-h3" href="#2-防止手機-os-suspend" data-target="2-防止手機-os-suspend">2. 防止手機 OS Suspend</a>
+  <a class="toc-h3" href="#3-在-pwa-顯示-ppt-講稿" data-target="3-在-pwa-顯示-ppt-講稿">3. 在 PWA 顯示 PPT 講稿</a>
+  <a class="toc-h3" href="#4-顯示目前-slide-截圖" data-target="4-顯示目前-slide-截圖">4. 顯示目前 Slide 截圖</a>
+  <a class="toc-h3" href="#5-在-pwa-中-slides-preview含截圖切換任意頁面" data-target="5-在-pwa-中-slides-preview含截圖切換任意頁面">5. 在 PWA 中 Slides Preview（含截圖）切換任意頁面</a>
+  <a class="toc-h2" href="#架構影響" data-target="架構影響">架構影響</a>
+  <a class="toc-h2" href="#最低相容性需求" data-target="最低相容性需求">最低相容性需求</a>
+
+  </div>
+  <div class="theme-switcher">
+    <div class="theme-switcher-label">Theme</div>
+    <div class="theme-options">
+      <button class="theme-option" data-theme="light" title="Light">☀️ Light</button>
+      <button class="theme-option" data-theme="dark" title="Dark">🌙 Dark</button>
+      <button class="theme-option active" data-theme="auto" title="Follow device">🖥️ Auto</button>
+    </div>
+  </div>
+</nav>
+
+<main class="content">
+<h1 id="powerpoint-add-in-功能可行性調查">PowerPoint Add-in 功能可行性調查</h1>
+<h2 id="目標">目標</h2>
+<p>評估新版 Pointer as a Service 希望加入的功能在技術上的可行性，涵蓋 PWA 實作、防止系統 Suspend、講稿顯示、Slide 截圖與任意頁面切換。</p>
+<h2 id="功能可行性總覽">功能可行性總覽</h2>
+<table>
+<thead><tr>
+<th>功能</th>
+<th>可行性</th>
+<th>關鍵技術</th>
+<th>最低需求</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>PWA 實現 Controller</td>
+<td>✅ 可行</td>
+<td>Service Worker + Web App Manifest</td>
+<td>現代瀏覽器</td>
+</tr>
+<tr>
+<td>防止手機 Suspend</td>
+<td>✅ 可行</td>
+<td>Wake Lock API</td>
+<td>Chromium 系、Safari 16.4+</td>
+</tr>
+<tr>
+<td>顯示 PPT 講稿</td>
+<td>✅ 可行</td>
+<td><span class="inline-code-wrapper"><code>slide.notesPage.notesTextFrame.text</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></td>
+<td>PowerPointApi 1.3+</td>
+</tr>
+<tr>
+<td>顯示目前 Slide 截圖</td>
+<td>⚠️ 有條件可行</td>
+<td><span class="inline-code-wrapper"><code>Slide.getImageAsBase64()</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></td>
+<td>PowerPointApi 1.4+</td>
+</tr>
+<tr>
+<td>任意頁面切換（含截圖預覽）</td>
+<td>✅ 可行</td>
+<td><span class="inline-code-wrapper"><code>goToByIdAsync</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> + <span class="inline-code-wrapper"><code>getImageAsBase64()</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span></td>
+<td>PowerPointApi 1.4+（截圖）；1.1（純列表）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="詳細分析">詳細分析</h2>
+<h3 id="1-使用-pwa-實現-controller">1. 使用 PWA 實現 Controller</h3>
+<p><strong>可行性</strong>：✅ 完全可行</p>
+<p>Controller 端（手機遙控器）可以改為 PWA，提供類 App 體驗。</p>
+<p><strong>實作要點</strong>：</p>
+<ul>
+<li>新增 <span class="inline-code-wrapper"><code>manifest.json</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span>（Web App Manifest），設定 <span class="inline-code-wrapper"><code>display: &quot;standalone&quot;</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 實現全螢幕無網址列</li>
+<li>註冊 Service Worker 快取靜態資源，支援離線載入 UI（WebSocket 連線仍需網路）</li>
+<li>加入 <span class="inline-code-wrapper"><code>&lt;meta name=&quot;apple-mobile-web-app-capable&quot; content=&quot;yes&quot;&gt;</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 支援 iOS Add to Home Screen</li>
+</ul>
+<p><strong>限制</strong>：</p>
+<ul>
+<li>iOS Safari 的 PWA 支援較 Android 弱，Push Notification 需 iOS 16.4+</li>
+<li>Service Worker 無法快取 WebSocket 連線，離線時僅能顯示 UI 但無法操控</li>
+</ul>
+<h3 id="2-防止手機-os-suspend">2. 防止手機 OS Suspend</h3>
+<p><strong>可行性</strong>：✅ 可行（主流平台支援）</p>
+<p>使用 <strong>Screen Wake Lock API</strong> 可防止螢幕在簡報過程中自動關閉。</p>
+<p><strong>實作要點</strong>：</p>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>let wakeLock = null;
+
+async function requestWakeLock() {
+  try {
+    wakeLock = await navigator.wakeLock.request(&#039;screen&#039;);
+    wakeLock.addEventListener(&#039;release&#039;, () =&gt; {
+      console.log(&#039;Wake Lock released&#039;);
+    });
+  } catch (err) {
+    console.error(`${err.name}: ${err.message}`);
+  }
+}
+
+// 切回前景時重新申請
+document.addEventListener(&#039;visibilitychange&#039;, () =&gt; {
+  if (wakeLock !== null &amp;&amp; document.visibilityState === &#039;visible&#039;) {
+    requestWakeLock();
+  }
+});</code></pre></div>
+<p><strong>平台支援</strong>：</p>
+<table>
+<thead><tr>
+<th>平台</th>
+<th>支援狀態</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Chrome (Android)</td>
+<td>✅ 支援</td>
+</tr>
+<tr>
+<td>Edge (Android)</td>
+<td>✅ 支援</td>
+</tr>
+<tr>
+<td>Samsung Internet</td>
+<td>✅ 支援</td>
+</tr>
+<tr>
+<td>Safari (iOS 16.4+)</td>
+<td>✅ 支援</td>
+</tr>
+<tr>
+<td>Firefox (Android)</td>
+<td>❌ 不支援</td>
+</tr>
+</tbody></table>
+<p><strong>限制</strong>：</p>
+<ul>
+<li>頁面進入背景（切換 App）時 Wake Lock 會自動釋放，需在 <span class="inline-code-wrapper"><code>visibilitychange</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 事件中重新申請</li>
+<li>Firefox Android 不支援，需在 UI 提示使用者手動關閉自動鎖屏</li>
+<li>PWA 以 standalone 模式運行時行為與瀏覽器一致</li>
+</ul>
+<h3 id="3-在-pwa-顯示-ppt-講稿">3. 在 PWA 顯示 PPT 講稿</h3>
+<p><strong>可行性</strong>：✅ 可行</p>
+<p>PowerPoint JavaScript API 自 <strong>PowerPointApi 1.3</strong> 起支援讀取投影片備忘稿。</p>
+<p><strong>實作要點</strong>：</p>
+<p>Host 端（Office Add-in）讀取講稿後透過 SignalR/WebSocket 傳送至 Controller 端。</p>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>// Host 端 - Office Add-in 內執行
+await PowerPoint.run(async (context) =&gt; {
+  const slides = context.presentation.slides;
+  slides.load(&quot;items&quot;);
+  await context.sync();
+
+  for (const slide of slides.items) {
+    slide.notesPage.notesTextFrame.load(&quot;text&quot;);
+  }
+  await context.sync();
+
+  // 將講稿透過 WebSocket 傳送至 Controller
+  const notes = slides.items.map((slide, i) =&gt; ({
+    index: i,
+    text: slide.notesPage.notesTextFrame.text
+  }));
+
+  connection.invoke(&quot;SyncNotes&quot;, token, JSON.stringify(notes));
+});</code></pre></div>
+<p><strong>限制</strong>：</p>
+<ul>
+<li>需要 PowerPointApi 1.3+，較舊的 Office 2016 永久授權版不支援</li>
+<li><span class="inline-code-wrapper"><code>notesPage</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 僅提供純文字，不包含備忘稿中的格式、圖片或超連結</li>
+<li>講稿內容需從 Host 端讀取後中繼至 Controller 端，無法由 Controller 直接存取</li>
+</ul>
+<h3 id="4-顯示目前-slide-截圖">4. 顯示目前 Slide 截圖</h3>
+<p><strong>可行性</strong>：⚠️ 有條件可行</p>
+<p><strong>PowerPointApi 1.4+</strong> 提供 <span class="inline-code-wrapper"><code>Slide.getImageAsBase64()</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 方法，可取得投影片的 Base64 編碼圖片。</p>
+<p><strong>實作要點</strong>：</p>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>// Host 端 - 取得當前投影片截圖
+await PowerPoint.run(async (context) =&gt; {
+  const selectedSlides = context.presentation.getSelectedSlides();
+  selectedSlides.load(&quot;items&quot;);
+  await context.sync();
+
+  if (selectedSlides.items.length &gt; 0) {
+    const slide = selectedSlides.items[0];
+    const image = slide.getImageAsBase64();
+    await context.sync();
+
+    // 將 Base64 圖片透過 WebSocket 傳送
+    connection.invoke(&quot;SyncSlideImage&quot;, token, image.value);
+  }
+});</code></pre></div>
+<p><strong>限制</strong>：</p>
+<ul>
+<li>需要 <strong>PowerPointApi 1.4+</strong>，支援範圍比 1.3 窄：<ul>
+<li>✅ PowerPoint on Windows（Microsoft 365 訂閱版）</li>
+<li>✅ PowerPoint on Web</li>
+<li>⚠️ PowerPoint on Mac（需較新版本）</li>
+<li>❌ Office 2019/2021 永久授權版可能不支援</li>
+</ul>
+</li>
+<li>圖片為 Base64 字串，傳輸體積較大（一張 1920x1080 約 200-500KB）</li>
+<li>每次換頁需重新擷取並傳送，頻繁換頁可能有延遲</li>
+<li>建議：傳輸前壓縮或降低解析度；可搭配節流（throttle）減少頻寬消耗</li>
+</ul>
+<p><strong>替代方案</strong>（若 1.4 不可用）：</p>
+<ul>
+<li>伺服器端使用 Microsoft Graph API 存取 OneDrive 中的簡報檔並轉換為圖片</li>
+<li>使用第三方函式庫（如 Aspose.Slides）在伺服器端解析 .pptx 匯出圖片</li>
+</ul>
+<h3 id="5-在-pwa-中-slides-preview含截圖切換任意頁面">5. 在 PWA 中 Slides Preview（含截圖）切換任意頁面</h3>
+<p><strong>可行性</strong>：✅ 可行（截圖預覽依賴功能 4，需 PowerPointApi 1.4+）</p>
+<p>此功能結合投影片列表列舉、截圖取得與 <span class="inline-code-wrapper"><code>goToByIdAsync</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span>，在 Controller 端呈現帶有縮圖的投影片總覽，讓講者可以直接跳轉到任意頁面。</p>
+<p><strong>實作要點</strong>：</p>
+<div class="code-block-wrapper"><button class="copy-btn code-block-copy" onclick="copyCode(this)">Copy</button><pre><code>// Host 端 - 簡報開始時一次性同步所有投影片 ID 與縮圖
+await PowerPoint.run(async (context) =&gt; {
+  const slides = context.presentation.slides;
+  slides.load(&quot;items/id&quot;);
+  await context.sync();
+
+  const slideList = [];
+  for (const slide of slides.items) {
+    const image = slide.getImageAsBase64(); // 需 PowerPointApi 1.4+
+    await context.sync();
+    slideList.push({
+      id: slide.id,
+      thumbnail: image.value  // Base64 編碼縮圖
+    });
+  }
+
+  // 傳送投影片清單（含縮圖）至 Controller
+  connection.invoke(&quot;SyncSlideList&quot;, token, JSON.stringify(slideList));
+});
+
+// Host 端 - 接收 Controller 指令跳轉至指定投影片
+connection.on(&quot;GoToSlide&quot;, (slideId) =&gt; {
+  Office.context.document.goToByIdAsync(
+    slideId,
+    Office.GoToType.Index,
+    (result) =&gt; {
+      if (result.status === Office.AsyncResultStatus.Succeeded) {
+        console.log(&quot;Navigated to slide&quot;);
+      }
+    }
+  );
+});</code></pre></div>
+<p><strong>Controller 端 UI 流程</strong>：</p>
+<ol>
+<li>簡報開始時收到完整投影片清單（含縮圖），渲染為可捲動的縮圖網格</li>
+<li>當前播放的投影片以高亮框標示</li>
+<li>使用者點擊任一縮圖</li>
+<li>發送 <span class="inline-code-wrapper"><code>GoToSlide</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 指令（帶 Slide ID）至 Host 端</li>
+<li>Host 端呼叫 <span class="inline-code-wrapper"><code>goToByIdAsync</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 跳轉，並回報新的當前頁碼</li>
+</ol>
+<p><strong>縮圖傳輸最佳化</strong>：</p>
+<ul>
+<li>初始同步時使用低解析度縮圖（如 480x270），降低總傳輸量</li>
+<li>全部投影片的縮圖可壓縮後一次傳送，避免逐張請求</li>
+<li>若投影片數量多（>50 頁），可分批載入（先傳前 10 張，其餘背景載入）</li>
+<li>快取已接收的縮圖，簡報過程中不需重複傳輸</li>
+</ul>
+<p><strong>限制</strong>：</p>
+<ul>
+<li><span class="inline-code-wrapper"><code>goToByIdAsync</code><button class="copy-btn inline-copy" onclick="copyInlineCode(this)">Copy</button></span> 需要 Slide ID（非 index），需先列舉所有投影片建立 ID 對照表</li>
+<li>跳轉在簡報模式下可能有動畫延遲</li>
+<li><strong>截圖預覽需要 PowerPointApi 1.4+</strong>；若不支援，可降級為僅顯示投影片編號的文字列表</li>
+<li>投影片數量多時，初始同步時間較長（每張截圖約 200-500KB）</li>
+</ul>
+<hr>
+<h2 id="架構影響">架構影響</h2>
+<p>新功能引入後，Host → Controller 的資料流將大幅增加：</p>
+<table>
+<thead><tr>
+<th>資料類型</th>
+<th>方向</th>
+<th>頻率</th>
+<th>大小</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>換頁指令</td>
+<td>Controller → Host</td>
+<td>使用者觸發</td>
+<td>< 100B</td>
+</tr>
+<tr>
+<td>講稿文字</td>
+<td>Host → Controller</td>
+<td>簡報開始時 + 換頁時</td>
+<td>1-10KB</td>
+</tr>
+<tr>
+<td>Slide 截圖</td>
+<td>Host → Controller</td>
+<td>每次換頁</td>
+<td>200-500KB</td>
+</tr>
+<tr>
+<td>投影片清單</td>
+<td>Host → Controller</td>
+<td>簡報開始時</td>
+<td>1-5KB</td>
+</tr>
+</tbody></table>
+<p><strong>建議</strong>：</p>
+<ul>
+<li>Slide 截圖傳輸量最大，建議降低解析度（如 960x540）並使用 JPEG 壓縮</li>
+<li>講稿與投影片清單可在簡報開始時一次性同步，後續僅傳送差異</li>
+<li>通訊層若從 SignalR 改為自建 WebSocket（參考通訊方法評估），需自行處理大型訊息的分片傳輸</li>
+</ul>
+<h2 id="最低相容性需求">最低相容性需求</h2>
+<table>
+<thead><tr>
+<th>元件</th>
+<th>最低需求</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Office Add-in (Host)</td>
+<td>PowerPointApi 1.4+（Microsoft 365 訂閱版）</td>
+</tr>
+<tr>
+<td>Controller 瀏覽器</td>
+<td>支援 PWA + Wake Lock API（Chrome 84+、Safari 16.4+）</td>
+</tr>
+<tr>
+<td>網路</td>
+<td>WebSocket 連線（Slide 截圖需足夠頻寬）</td>
+</tr>
+</tbody></table>
+<p>若需向下相容 PowerPointApi 1.3（無截圖），可將 Slide 截圖功能設為選用，其餘功能（講稿、換頁、任意跳轉）皆可正常運作。</p>
+
+</main>
+
+<script>
+// Copy 功能
+function copyCode(btn) {
+  const code = btn.parentElement.querySelector('code');
+  navigator.clipboard.writeText(code.textContent).then(function() {
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+function copyInlineCode(btn) {
+  const code = btn.parentElement.querySelector('code');
+  navigator.clipboard.writeText(code.textContent).then(function() {
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+
+// Lightbox 功能
+function openLightbox(img) {
+  var overlay = document.createElement('div');
+  overlay.className = 'lightbox-overlay';
+  var rect = img.getBoundingClientRect();
+  var clone = document.createElement('img');
+  clone.src = img.src;
+  clone.alt = img.alt;
+  // 起始位置：圖片原始位置
+  clone.style.top = rect.top + 'px';
+  clone.style.left = rect.left + 'px';
+  clone.style.width = rect.width + 'px';
+  clone.style.height = rect.height + 'px';
+  overlay.appendChild(clone);
+  document.body.appendChild(overlay);
+  // 觸發放大動畫
+  requestAnimationFrame(function() {
+    overlay.classList.add('active');
+    // 計算置中目標位置
+    var vw = window.innerWidth * 0.9;
+    var vh = window.innerHeight * 0.9;
+    var naturalW = img.naturalWidth || rect.width;
+    var naturalH = img.naturalHeight || rect.height;
+    var scale = Math.min(vw / naturalW, vh / naturalH, 1);
+    var finalW = naturalW * scale;
+    var finalH = naturalH * scale;
+    var finalTop = (window.innerHeight - finalH) / 2;
+    var finalLeft = (window.innerWidth - finalW) / 2;
+    clone.style.top = finalTop + 'px';
+    clone.style.left = finalLeft + 'px';
+    clone.style.width = finalW + 'px';
+    clone.style.height = finalH + 'px';
+  });
+  // 關閉 lightbox：縮回原始位置
+  function closeLightbox() {
+    var currentRect = img.getBoundingClientRect();
+    clone.style.top = currentRect.top + 'px';
+    clone.style.left = currentRect.left + 'px';
+    clone.style.width = currentRect.width + 'px';
+    clone.style.height = currentRect.height + 'px';
+    overlay.classList.remove('active');
+    setTimeout(function() {
+      overlay.remove();
+    }, 300);
+  }
+  overlay.addEventListener('click', closeLightbox);
+}
+
+// Sidebar toggle (tablet / mobile landscape)
+(function() {
+  var toggle = document.getElementById('sidebarToggle');
+  var sidebar = document.getElementById('sidebar');
+  var backdrop = document.getElementById('sidebarBackdrop');
+
+  function openSidebar() {
+    sidebar.classList.add('sidebar-open');
+    backdrop.style.display = 'block';
+    requestAnimationFrame(function() { backdrop.classList.add('active'); });
+    toggle.textContent = '✕';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('sidebar-open');
+    backdrop.classList.remove('active');
+    setTimeout(function() { backdrop.style.display = 'none'; }, 250);
+    toggle.textContent = '☰';
+  }
+
+  toggle.addEventListener('click', function() {
+    if (sidebar.classList.contains('sidebar-open')) { closeSidebar(); }
+    else { openSidebar(); }
+  });
+  backdrop.addEventListener('click', closeSidebar);
+
+  // Close sidebar when a TOC link is clicked (saves one tap)
+  sidebar.querySelectorAll('a[data-target]').forEach(function(link) {
+    link.addEventListener('click', function() {
+      if (sidebar.classList.contains('sidebar-open')) { closeSidebar(); }
+    });
+  });
+})();
+
+// Theme switcher
+(function() {
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll('.theme-option');
+  var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function applyTheme(mode) {
+    if (mode === 'auto') {
+      root.setAttribute('data-theme', mediaQuery.matches ? 'dark' : 'light');
+    } else {
+      root.setAttribute('data-theme', mode);
+    }
+    buttons.forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-theme') === mode);
+    });
+  }
+
+  // Restore saved preference or default to auto
+  var saved = localStorage.getItem('theme') || 'auto';
+  applyTheme(saved);
+
+  buttons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var mode = btn.getAttribute('data-theme');
+      localStorage.setItem('theme', mode);
+      applyTheme(mode);
+    });
+  });
+
+  // Listen for device theme changes when in auto mode
+  mediaQuery.addEventListener('change', function() {
+    if ((localStorage.getItem('theme') || 'auto') === 'auto') {
+      applyTheme('auto');
+    }
+  });
+})();
+
+// Scroll Spy
+(function() {
+  const links = document.querySelectorAll('nav.sidebar a[data-target]');
+  const sections = [];
+  links.forEach(link => {
+    const id = link.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if (el) sections.push({ link, el });
+  });
+
+  function updateActive() {
+    let current = null;
+    const scrollY = window.scrollY + 60;
+    for (let i = sections.length - 1; i >= 0; i--) {
+      if (sections[i].el.offsetTop <= scrollY) {
+        current = sections[i];
+        break;
+      }
+    }
+    links.forEach(l => l.classList.remove('active'));
+    if (current) {
+      current.link.classList.add('active');
+      current.link.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => { updateActive(); ticking = false; });
+      ticking = true;
+    }
+  });
+  updateActive();
+})();
+</script>
+</body>
+</html>

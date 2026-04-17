@@ -1,0 +1,48 @@
+@startsalt
+title Controller Page (Mobile) - control.html
+{+
+  {
+    <b>Presentation.pptx</b> | . | Connected
+  }
+  {SI
+    {+
+      {^"Current Slide (swipe left/right to navigate)"
+        "                                    "
+        "                                    "
+        "                                    "
+        "        [ Slide Thumbnail ]         "
+        "        [ from PowerPoint ]         "
+        "                                    "
+        "                                    "
+        "                                    "
+      }
+    }
+    --
+    {
+      {^"Next Slide"
+        "               "
+        " [ thumbnail ] "
+        "               "
+      }
+      | .
+    }
+    ==
+    {^"Speaker Notes  (tap to expand/collapse)"
+      "Welcome everyone to today's         "
+      "presentation. In this session ...   "
+    }
+    ==
+    {
+      [ First ]
+      |
+      [ Prev ]
+      |
+      [ Next ]
+    }
+    --
+    {
+      [ Slides ] | . | [ Theme ]
+    }
+  }
+}
+@endsalt

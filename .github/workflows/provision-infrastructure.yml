@@ -1,0 +1,154 @@
+name: Provision Infrastructure
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/terraform/**"
+      - "src/functions/**"
+
+permissions:
+  id-token: write
+  contents: write
+
+env:
+  TERRAFORM_DIR: src/terraform
+  FUNCTIONS_DIR: src/functions
+  STATE_BRANCH: terraform-state
+
+jobs:
+  provision:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    outputs:
+      function_app_name: ${{ steps.tf-output.outputs.function_app_name }}
+      static_webapp_url: ${{ steps.tf-output.outputs.static_webapp_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Restore Terraform State
+        env:
+          TFSTATE_KEY: ${{ secrets.TFSTATE_ENCRYPTION_KEY }}
+        run: |
+          if git fetch origin ${{ env.STATE_BRANCH }} 2>/dev/null; then
+            git checkout origin/${{ env.STATE_BRANCH }} -- terraform.tfstate.enc 2>/dev/null || true
+            if [ -f terraform.tfstate.enc ]; then
+              openssl enc -aes-256-cbc -d -pbkdf2 -salt \
+                -in terraform.tfstate.enc \
+                -out ${{ env.TERRAFORM_DIR }}/terraform.tfstate \
+                -pass pass:"$TFSTATE_KEY"
+              rm terraform.tfstate.enc
+              echo "Restored and decrypted state from ${{ env.STATE_BRANCH }} branch"
+            else
+              echo "State branch exists but no encrypted state file found"
+            fi
+          else
+            echo "No existing state branch found, starting fresh"
+          fi
+
+      - name: Terraform Init
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: |
+          terraform apply -auto-approve \
+            -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      - name: Export Terraform Outputs
+        id: tf-output
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: |
+          echo "function_app_name=$(terraform output -raw function_app_name)" >> "$GITHUB_OUTPUT"
+          echo "static_webapp_url=$(terraform output -raw static_webapp_url)" >> "$GITHUB_OUTPUT"
+
+      - name: Save Terraform State
+        env:
+          TFSTATE_KEY: ${{ secrets.TFSTATE_ENCRYPTION_KEY }}
+        run: |
+          cd ${{ env.TERRAFORM_DIR }}
+          if [ ! -f terraform.tfstate ]; then
+            echo "No state file to save"
+            exit 0
+          fi
+
+          # Encrypt state files
+          TEMP_DIR=$(mktemp -d)
+          openssl enc -aes-256-cbc -pbkdf2 -salt \
+            -in terraform.tfstate \
+            -out "$TEMP_DIR/terraform.tfstate.enc" \
+            -pass pass:"$TFSTATE_KEY"
+
+          cd "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create orphan branch if it doesn't exist, or checkout existing
+          if git fetch origin ${{ env.STATE_BRANCH }} 2>/dev/null; then
+            git checkout ${{ env.STATE_BRANCH }}
+          else
+            git checkout --orphan ${{ env.STATE_BRANCH }}
+            git rm -rf . 2>/dev/null || true
+            echo "# Terraform State (Encrypted)" > README.md
+            echo "" >> README.md
+            echo "This branch stores AES-256-CBC encrypted Terraform state files." >> README.md
+            echo "Decryption key is stored in GitHub Secrets as \`TFSTATE_ENCRYPTION_KEY\`." >> README.md
+            echo "Do not modify manually." >> README.md
+            git add README.md
+          fi
+
+          cp "$TEMP_DIR/terraform.tfstate.enc" .
+          git add terraform.tfstate.enc
+          git commit -m "Update Terraform state [skip ci]" || echo "No state changes"
+          git push origin ${{ env.STATE_BRANCH }}
+
+  deploy-functions:
+    name: Deploy Azure Functions
+    runs-on: ubuntu-latest
+    needs: provision
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+        working-directory: ${{ env.FUNCTIONS_DIR }}
+        run: npm ci
+
+      - name: Build
+        working-directory: ${{ env.FUNCTIONS_DIR }}
+        run: npm run build
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ needs.provision.outputs.function_app_name }}
+          package: ${{ env.FUNCTIONS_DIR }}

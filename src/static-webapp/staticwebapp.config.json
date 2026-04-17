@@ -1,0 +1,12 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/css/*", "/js/*", "/assets/*", "/*.ico", "/sw.js", "/manifest.json"]
+  },
+  "routes": [
+    {
+      "route": "/control*",
+      "rewrite": "/control.html"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "pointer-as-a-service-functions",
+  "version": "1.0.0",
+  "description": "Azure Functions for Pointer as a Service - negotiate endpoint for Azure Web PubSub",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rimraf dist",
+    "prestart": "npm run clean && npm run build",
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.0.0",
+    "@azure/web-pubsub": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "rimraf": "^5.0.0"
+  }
+}
