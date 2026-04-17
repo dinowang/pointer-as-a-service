@@ -1,4 +1,4 @@
-const CACHE_NAME = "pointer-v1";
+const CACHE_NAME = "pointer-v2";
 const ASSETS = [
   "/",
   "/index.html",
@@ -30,24 +30,18 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Skip non-GET and API/negotiate requests
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   if (url.pathname.startsWith("/api/")) return;
 
+  // Network first for all requests, fall back to cache for offline
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      // Network first for HTML, cache first for assets
-      if (event.request.headers.get("accept")?.includes("text/html")) {
-        return fetch(event.request)
-          .then((response) => {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-            return response;
-          })
-          .catch(() => cached);
-      }
-      return cached || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
