@@ -85,7 +85,7 @@ az ad app federated-credential create \
   --parameters '{
     "name": "github-main-branch",
     "issuer": "https://token.actions.githubusercontent.com",
-    "subject": "repo:<YOUR_GITHUB_USER>/pointer-as-a-service:ref:refs/heads/main",
+    "subject": "repo:<YOUR_GITHUB_USER>/pointer-as-a-service:ref:refs/heads/<DEFAULT_BRANCH>",
     "audiences": ["api://AzureADTokenExchange"]
   }'
 
@@ -108,7 +108,7 @@ az ad app federated-credential create \
 4. 填入：
    - Organization: `<your GitHub username or org>`
    - Repository: `pointer-as-a-service`
-   - Entity type: `Branch` → `main`
+   - Entity type: `Branch` → `master`（或你的 default branch）
 5. 重複上述步驟，新增 Entity type: `Environment` → `production`
 
 </details>

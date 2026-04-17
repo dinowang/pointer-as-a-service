@@ -39,6 +39,7 @@ done
 REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || git remote get-url origin | sed -E 's|.*github\.com[:/]||;s|\.git$||')
 REPO_NAME=$(echo "$REPO" | cut -d'/' -f2)
 APP_DISPLAY_NAME="github-${REPO_NAME}"
+DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || git remote show origin 2>/dev/null | grep 'HEAD branch' | awk '{print $NF}' || echo "main")
 
 # ── 檢查前置工具 ────────────────────────────────────────────
 for cmd in az gh jq openssl; do
@@ -122,7 +123,7 @@ create_federated_credential() {
 
 echo ""
 echo "🔧 Step 4: 建立 Federated Credentials..."
-create_federated_credential "github-main-branch" "repo:${REPO}:ref:refs/heads/main"
+create_federated_credential "github-${DEFAULT_BRANCH}-branch" "repo:${REPO}:ref:refs/heads/${DEFAULT_BRANCH}"
 create_federated_credential "github-workflow-dispatch" "repo:${REPO}:environment:production"
 
 # ── Step 5: 產生 Terraform State 加密金鑰 ──────────────────

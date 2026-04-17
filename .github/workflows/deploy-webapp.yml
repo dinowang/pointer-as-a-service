@@ -8,7 +8,7 @@ on:
         required: false
         type: string
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - "src/static-webapp/**"
       - "manifest/**"
