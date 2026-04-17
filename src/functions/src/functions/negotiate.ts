@@ -20,7 +20,7 @@ async function negotiate(
 
   const serviceClient = new WebPubSubServiceClient(connectionString, hubName);
 
-  const clientAccessUrl = await serviceClient.getClientAccessUrl({
+  const { url: clientAccessUrl } = await serviceClient.getClientAccessToken({
     roles: [
       `webpubsub.joinLeaveGroup.${token}`,
       `webpubsub.sendToGroup.${token}`,
