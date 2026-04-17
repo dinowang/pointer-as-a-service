@@ -13,8 +13,11 @@
 
   if (!token) {
     token = Shared.generateToken();
-    const newUrl = `${window.location.pathname}?id=${token}`;
-    window.history.replaceState(null, "", newUrl);
+    // Office Add-in iframe may restrict history API
+    try {
+      const newUrl = `${window.location.pathname}?id=${token}`;
+      window.history.replaceState(null, "", newUrl);
+    } catch (_) { /* sandboxed iframe */ }
   }
 
   document.getElementById("token").value = token;
