@@ -10,6 +10,7 @@
   let client = null;
   let officeReady = false;
   let slideIds = [];
+  let syncInProgress = false;
 
   // ---------- Image Compression ----------
 
@@ -388,6 +389,11 @@
 
   async function syncAllSlides() {
     if (!officeReady) return;
+    if (syncInProgress) {
+      console.log("syncAllSlides: already in progress, skipping");
+      return;
+    }
+    syncInProgress = true;
     console.log("syncAllSlides: starting...");
 
     try {
@@ -476,6 +482,8 @@
       });
     } catch (err) {
       console.error("syncAllSlides error:", err);
+    } finally {
+      syncInProgress = false;
     }
   }
 
