@@ -200,24 +200,33 @@
 
     try {
       await PowerPoint.run(async (context) => {
-        const selectedSlides = context.presentation.getSelectedSlides();
-        selectedSlides.load("items/id");
+        const slides = context.presentation.slides;
+        slides.load("items/id");
         await context.sync();
 
-        if (selectedSlides.items.length === 0) {
-          console.warn("syncCurrentSlide: no slides selected");
-          return;
+        // Use ActiveView to detect current slide index via selection
+        var slideIndex = -1;
+        var slideId = null;
+        try {
+          const selectedSlides = context.presentation.getSelectedSlides();
+          selectedSlides.load("items");
+          await context.sync();
+          if (selectedSlides.items.length > 0) {
+            selectedSlides.items[0].load("id");
+            await context.sync();
+            slideId = selectedSlides.items[0].id;
+            slideIndex = slides.items.findIndex(function (s) { return s.id === slideId; });
+          }
+        } catch (e) {
+          console.warn("getSelectedSlides not available:", e.message);
         }
 
-        const slide = selectedSlides.items[0];
-        const slideIndex = await getSlideIndex(context, slide.id);
+        console.log("syncCurrentSlide:", { slideIndex, slideId: slideId });
 
-        console.log("syncCurrentSlide:", { slideIndex, slideId: slide.id });
-
-        if (client) {
+        if (client && slideIndex >= 0) {
           client.sendToGroup(
             token,
-            { type: "SlideChanged", slideId: slide.id, slideIndex },
+            { type: "SlideChanged", slideId: slideId, slideIndex: slideIndex },
             "json",
             { noEcho: true }
           );
