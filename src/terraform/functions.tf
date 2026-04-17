@@ -30,12 +30,6 @@ resource "azurerm_linux_function_app" "main" {
     application_stack {
       node_version = "20"
     }
-
-    cors {
-      allowed_origins = [
-        "https://${azurerm_static_web_app.main.default_host_name}"
-      ]
-    }
   }
 
   app_settings = {
@@ -44,4 +38,26 @@ resource "azurerm_linux_function_app" "main" {
   }
 
   tags = var.tags
+}
+
+# CORS configured separately to avoid azurerm provider plan inconsistency bug
+# when cors block references computed values (SWA hostname)
+resource "terraform_data" "function_cors" {
+  depends_on = [
+    azurerm_linux_function_app.main,
+    azurerm_static_web_app.main
+  ]
+
+  triggers_replace = [
+    azurerm_static_web_app.main.default_host_name
+  ]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      az functionapp cors add \
+        --name ${azurerm_linux_function_app.main.name} \
+        --resource-group ${azurerm_resource_group.main.name} \
+        --allowed-origins "https://${azurerm_static_web_app.main.default_host_name}"
+    EOT
+  }
 }
