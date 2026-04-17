@@ -38,16 +38,19 @@
 
   function getFileAsUint8Array() {
     return new Promise(function (resolve, reject) {
+      console.log("getFileAsUint8Array: calling getFileAsync(Compressed)...");
       Office.context.document.getFileAsync(
         Office.FileType.Compressed,
-        { sliceSize: 65536 },
+        { sliceSize: 4194304 },
         function (result) {
+          console.log("getFileAsUint8Array: callback status:", result.status);
           if (result.status !== Office.AsyncResultStatus.Succeeded) {
             reject(new Error("getFileAsync: " + (result.error ? result.error.message : "unknown")));
             return;
           }
           var file = result.value;
           var sliceCount = file.sliceCount;
+          console.log("getFileAsUint8Array: file size:", file.size, "bytes, slices:", sliceCount);
           var slices = new Array(sliceCount);
           var received = 0;
 
@@ -56,11 +59,13 @@
               file.getSliceAsync(idx, function (sliceResult) {
                 if (sliceResult.status === Office.AsyncResultStatus.Succeeded) {
                   slices[idx] = sliceResult.value.data;
+                  console.log("getFileAsUint8Array: slice", idx, "received,", sliceResult.value.data.length, "bytes");
+                } else {
+                  console.warn("getFileAsUint8Array: slice", idx, "failed");
                 }
                 received++;
                 if (received === sliceCount) {
                   file.closeAsync();
-                  // Combine all slices into a single Uint8Array
                   var totalLen = 0;
                   for (var s = 0; s < slices.length; s++) {
                     totalLen += (slices[s] ? slices[s].length : 0);
@@ -73,6 +78,7 @@
                       combined[offset++] = slices[s][b];
                     }
                   }
+                  console.log("getFileAsUint8Array: complete, total:", totalLen, "bytes");
                   resolve(combined);
                 }
               });
@@ -387,14 +393,18 @@
     try {
       // Step 1: Extract notes from OOXML (getFileAsync + JSZip)
       var notesByIndex = [];
-      if (typeof JSZip !== "undefined") {
+      if (typeof JSZip === "undefined") {
+        console.warn("syncAllSlides: JSZip not loaded, skipping notes");
+      } else if (Office.context.requirements && !Office.context.requirements.isSetSupported("File", "1.1")) {
+        console.warn("syncAllSlides: File API not supported on this platform, skipping notes");
+      } else {
         try {
           console.log("syncAllSlides: downloading PPTX for notes extraction...");
-          // Timeout after 15 seconds to avoid blocking thumbnails
+          // Allow up to 120s — file can be large and PowerPoint Online may be slow
           var fileData = await Promise.race([
             getFileAsUint8Array(),
             new Promise(function (_, reject) {
-              setTimeout(function () { reject(new Error("getFileAsync timeout (15s)")); }, 15000);
+              setTimeout(function () { reject(new Error("getFileAsync timeout (120s)")); }, 120000);
             })
           ]);
           console.log("syncAllSlides: PPTX downloaded,", fileData.length, "bytes, parsing notes...");
@@ -404,8 +414,6 @@
         } catch (notesErr) {
           console.warn("syncAllSlides: notes extraction failed:", notesErr.message);
         }
-      } else {
-        console.warn("syncAllSlides: JSZip not loaded, skipping notes");
       }
 
       // Step 2: Get thumbnails via PowerPoint Rich API
