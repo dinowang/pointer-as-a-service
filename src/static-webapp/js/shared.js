@@ -75,18 +75,96 @@ function getTokenFromUrl() {
 // ---------- Web PubSub ----------
 
 async function negotiate(token) {
-  const url = `${NEGOTIATE_ENDPOINT}?id=${encodeURIComponent(token)}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Negotiate failed: ${res.status}`);
+  var url = NEGOTIATE_ENDPOINT + "?id=" + encodeURIComponent(token);
+  var res = await fetch(url);
+  if (!res.ok) throw new Error("Negotiate failed: " + res.status);
   return res.json();
 }
 
+// Lightweight Web PubSub client using native WebSocket
+// with json.webpubsub.azure.v1 subprotocol
+function PubSubClient(wsUrl) {
+  var self = this;
+  var ws = null;
+  var handlers = {};
+  var ackId = 1;
+
+  self.on = function (event, fn) {
+    handlers[event] = handlers[event] || [];
+    handlers[event].push(fn);
+  };
+
+  function emit(event, data) {
+    (handlers[event] || []).forEach(function (fn) { fn(data); });
+  }
+
+  self.start = function () {
+    return new Promise(function (resolve, reject) {
+      ws = new WebSocket(wsUrl, "json.webpubsub.azure.v1");
+
+      ws.onopen = function () {
+        // connected event comes from server message, not onopen
+      };
+
+      ws.onmessage = function (evt) {
+        var msg;
+        try { msg = JSON.parse(evt.data); } catch (_) { return; }
+
+        if (msg.event === "connected") {
+          emit("connected", msg);
+          resolve();
+        } else if (msg.event === "disconnected") {
+          emit("disconnected", msg);
+        } else if (msg.type === "message" && msg.from === "group") {
+          emit("group-message", {
+            message: {
+              group: msg.group,
+              data: msg.data
+            }
+          });
+        }
+      };
+
+      ws.onclose = function () {
+        emit("disconnected", {});
+      };
+
+      ws.onerror = function (err) {
+        reject(err);
+      };
+    });
+  };
+
+  self.joinGroup = function (group) {
+    ws.send(JSON.stringify({
+      type: "joinGroup",
+      group: group,
+      ackId: ackId++
+    }));
+  };
+
+  self.sendToGroup = function (group, data, dataType, options) {
+    var msg = {
+      type: "sendToGroup",
+      group: group,
+      data: data,
+      dataType: dataType || "json",
+      ackId: ackId++
+    };
+    if (options && options.noEcho) {
+      msg.noEcho = true;
+    }
+    ws.send(JSON.stringify(msg));
+  };
+
+  self.stop = function () {
+    if (ws) ws.close();
+  };
+}
+
 async function createPubSubClient(token) {
-  const { url } = await negotiate(token);
-  // UMD bundle exposes AzureWebPubSubClient global
-  const { WebPubSubClient: Client } = window.AzureWebPubSubClient || window;
-  const client = new Client(url);
-  return client;
+  var result = await negotiate(token);
+  return new PubSubClient(result.url);
 }
 
 // ---------- Status indicator ----------
