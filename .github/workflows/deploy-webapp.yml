@@ -37,17 +37,19 @@ jobs:
           if [ -n "${{ inputs.base_url }}" ]; then
             echo "url=${{ inputs.base_url }}" >> "$GITHUB_OUTPUT"
           else
-            # Try to get from Terraform state artifact
-            echo "url=https://pointer-swa.azurestaticapps.net" >> "$GITHUB_OUTPUT"
+            echo "url=" >> "$GITHUB_OUTPUT"
+            echo "⚠️ No base_url provided. Use workflow_dispatch with base_url input."
           fi
 
       - name: Generate Manifest
+        if: steps.base-url.outputs.url != ''
         run: |
           sed 's|{{BASE_URL}}|${{ steps.base-url.outputs.url }}|g' \
             "${{ env.MANIFEST_TEMPLATE }}" > manifest/pointer-as-a-service.xml
           echo "Generated manifest with base URL: ${{ steps.base-url.outputs.url }}"
 
       - name: Upload Manifest Artifact
+        if: steps.base-url.outputs.url != ''
         uses: actions/upload-artifact@v4
         with:
           name: office-addin-manifest
