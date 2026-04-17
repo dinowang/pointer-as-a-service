@@ -1,3 +1,8 @@
+output "resource_suffix" {
+  description = "Random suffix used for resource naming"
+  value       = random_id.suffix.hex
+}
+
 output "resource_group_name" {
   description = "Name of the resource group"
   value       = azurerm_resource_group.main.name
