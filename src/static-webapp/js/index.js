@@ -279,19 +279,22 @@
 
           let notes = "";
           try {
-            const notesSlide = slide.notesSlide;
-            const shapes = notesSlide.shapes;
-            shapes.load("items");
+            slide.load("notesSlide");
             await context.sync();
-            for (let j = 0; j < shapes.items.length; j++) {
-              shapes.items[j].textFrame.load("textRange/text");
-            }
-            await context.sync();
-            for (let j = 0; j < shapes.items.length; j++) {
-              try {
-                const text = shapes.items[j].textFrame.textRange.text;
-                if (text && text.trim()) { notes = text; break; }
-              } catch (_) { /* no text frame */ }
+            if (slide.notesSlide) {
+              const shapes = slide.notesSlide.shapes;
+              shapes.load("items");
+              await context.sync();
+              for (let j = 0; j < shapes.items.length; j++) {
+                shapes.items[j].textFrame.load("textRange/text");
+              }
+              await context.sync();
+              for (let j = 0; j < shapes.items.length; j++) {
+                try {
+                  const text = shapes.items[j].textFrame.textRange.text;
+                  if (text && text.trim()) { notes = text; break; }
+                } catch (_) { /* no text frame */ }
+              }
             }
           } catch (e) {
             console.warn("syncAllSlides: slide", i, "notes error:", e.message);
