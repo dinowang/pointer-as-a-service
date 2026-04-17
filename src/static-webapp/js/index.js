@@ -199,23 +199,16 @@
       await PowerPoint.run(async (context) => {
         const slides = context.presentation.slides;
         slides.load("items/id");
+        const selectedSlides = context.presentation.getSelectedSlides();
+        selectedSlides.load("items/id");
         await context.sync();
 
-        // Use ActiveView to detect current slide index via selection
         var slideIndex = -1;
         var slideId = null;
-        try {
-          const selectedSlides = context.presentation.getSelectedSlides();
-          selectedSlides.load("items");
-          await context.sync();
-          if (selectedSlides.items.length > 0) {
-            selectedSlides.items[0].load("id");
-            await context.sync();
-            slideId = selectedSlides.items[0].id;
-            slideIndex = slides.items.findIndex(function (s) { return s.id === slideId; });
-          }
-        } catch (e) {
-          console.warn("getSelectedSlides not available:", e.message);
+
+        if (selectedSlides.items.length > 0) {
+          slideId = selectedSlides.items[0].id;
+          slideIndex = slides.items.findIndex(function (s) { return s.id === slideId; });
         }
 
         console.log("syncCurrentSlide:", { slideIndex, slideId: slideId });
@@ -276,25 +269,32 @@
 
           let notes = "";
           try {
-            slide.load("notesSlide");
+            var ns = slide.notesSlide;
+            ns.load("shapes");
             await context.sync();
-            if (slide.notesSlide) {
-              const shapes = slide.notesSlide.shapes;
+          } catch (e) {
+            // notesSlide doesn't exist for this slide — skip
+            ns = null;
+          }
+          if (ns) {
+            try {
+              var shapes = ns.shapes;
               shapes.load("items");
               await context.sync();
+              console.log("syncAllSlides: slide", i, "has", shapes.items.length, "note shapes");
               for (let j = 0; j < shapes.items.length; j++) {
                 shapes.items[j].textFrame.load("textRange/text");
               }
               await context.sync();
               for (let j = 0; j < shapes.items.length; j++) {
                 try {
-                  const text = shapes.items[j].textFrame.textRange.text;
+                  var text = shapes.items[j].textFrame.textRange.text;
                   if (text && text.trim()) { notes = text; break; }
                 } catch (_) { /* no text frame */ }
               }
+            } catch (e2) {
+              console.warn("syncAllSlides: slide", i, "notes shapes error:", e2.message);
             }
-          } catch (e) {
-            console.warn("syncAllSlides: slide", i, "notes error:", e.message);
           }
 
           console.log("syncAllSlides: slide", i, "=> thumbnail:", !!thumbnail, "notes:", notes.length);
@@ -321,13 +321,6 @@
     } catch (err) {
       console.error("syncAllSlides error:", err);
     }
-  }
-
-  async function getSlideIndex(context, slideId) {
-    const slides = context.presentation.slides;
-    slides.load("items/id");
-    await context.sync();
-    return slides.items.findIndex((s) => s.id === slideId);
   }
 
   // ---------- Office Ready ----------
