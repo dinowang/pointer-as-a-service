@@ -42,6 +42,7 @@ resource "azurerm_linux_function_app" "main" {
 
 # CORS configured separately to avoid azurerm provider plan inconsistency bug
 # when cors block references computed values (SWA hostname)
+# Use triggers_replace with timestamp to ensure CORS is always re-applied
 resource "terraform_data" "function_cors" {
   depends_on = [
     azurerm_linux_function_app.main,
@@ -49,11 +50,15 @@ resource "terraform_data" "function_cors" {
   ]
 
   triggers_replace = [
-    azurerm_static_web_app.main.default_host_name
+    timestamp()
   ]
 
   provisioner "local-exec" {
     command = <<-EOT
+      az functionapp cors remove \
+        --name ${azurerm_linux_function_app.main.name} \
+        --resource-group ${azurerm_resource_group.main.name} \
+        --allowed-origins "*" 2>/dev/null || true
       az functionapp cors add \
         --name ${azurerm_linux_function_app.main.name} \
         --resource-group ${azurerm_resource_group.main.name} \
