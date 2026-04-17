@@ -13,11 +13,10 @@
 
   if (!token) {
     token = Shared.generateToken();
-    // Office Add-in iframe may restrict history API
-    try {
-      const newUrl = `${window.location.pathname}?id=${token}`;
-      window.history.replaceState(null, "", newUrl);
-    } catch (_) { /* sandboxed iframe */ }
+    // Office Add-in iframe may not expose history API
+    if (typeof window.history?.replaceState === "function") {
+      window.history.replaceState(null, "", `${window.location.pathname}?id=${token}`);
+    }
   }
 
   document.getElementById("token").value = token;
