@@ -122,6 +122,8 @@ function PubSubClient(wsUrl) {
               data: msg.data
             }
           });
+        } else if (msg.type === "ack" && !msg.success) {
+          console.error("PubSub ack error:", msg.error);
         }
       };
 
@@ -136,7 +138,10 @@ function PubSubClient(wsUrl) {
   };
 
   self.joinGroup = function (group) {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      console.warn("joinGroup: WebSocket not open");
+      return;
+    }
     ws.send(JSON.stringify({
       type: "joinGroup",
       group: group,
@@ -145,18 +150,20 @@ function PubSubClient(wsUrl) {
   };
 
   self.sendToGroup = function (group, data, dataType, options) {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    var msg = {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      console.warn("sendToGroup: WebSocket not open");
+      return;
+    }
+    var payload = JSON.stringify({
       type: "sendToGroup",
       group: group,
       data: data,
       dataType: dataType || "json",
+      noEcho: (options && options.noEcho) || false,
       ackId: ackId++
-    };
-    if (options && options.noEcho) {
-      msg.noEcho = true;
-    }
-    ws.send(JSON.stringify(msg));
+    });
+    console.log("sendToGroup size:", payload.length, "bytes, data.type:", data.type);
+    ws.send(payload);
   };
 
   self.stop = function () {

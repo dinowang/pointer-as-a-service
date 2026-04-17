@@ -238,41 +238,43 @@
   }
 
   async function syncAllSlides() {
-    if (!officeReady) return;
+    if (!officeReady) {
+      console.warn("syncAllSlides: Office not ready");
+      return;
+    }
+
+    console.log("syncAllSlides: starting...");
 
     try {
       await PowerPoint.run(async (context) => {
         const slides = context.presentation.slides;
-        slides.load("items/id");
+        slides.load("items");
         await context.sync();
 
-        // Try to load hidden property (may not be available in all API versions)
-        var hiddenSupported = true;
-        try {
-          for (var h = 0; h < slides.items.length; h++) {
-            slides.items[h].load("hidden");
-          }
-          await context.sync();
-        } catch (_) {
-          hiddenSupported = false;
+        console.log("syncAllSlides: loaded", slides.items.length, "slides");
+
+        // Load all slide IDs
+        for (var s = 0; s < slides.items.length; s++) {
+          slides.items[s].load("id");
         }
+        await context.sync();
 
         const slideList = [];
-        var visibleIndex = 0;
         for (let i = 0; i < slides.items.length; i++) {
           const slide = slides.items[i];
-
-          // Skip hidden slides
-          if (hiddenSupported && slide.hidden) continue;
+          console.log("syncAllSlides: processing slide", i, "id:", slide.id);
 
           let thumbnail = null;
           try {
             const image = slide.getImageAsBase64();
             await context.sync();
-            // Compress: 320px wide, JPEG quality 0.5
-            thumbnail = await compressImage(image.value, 320, 0.5);
+            console.log("syncAllSlides: slide", i, "raw image size:", image.value ? image.value.length : 0);
+            if (image.value) {
+              thumbnail = await compressImage(image.value, 320, 0.5);
+              console.log("syncAllSlides: slide", i, "compressed size:", thumbnail ? thumbnail.length : 0);
+            }
           } catch (e) {
-            // PowerPointApi 1.4 not available
+            console.warn("syncAllSlides: slide", i, "getImageAsBase64 error:", e.message);
           }
 
           let notes = "";
@@ -292,19 +294,20 @@
               } catch (_) { /* no text frame */ }
             }
           } catch (e) {
-            // Notes API not available
+            console.warn("syncAllSlides: slide", i, "notes error:", e.message);
           }
+
+          console.log("syncAllSlides: slide", i, "=> thumbnail:", !!thumbnail, "notes:", notes.length);
 
           slideList.push({
             id: slide.id,
-            index: visibleIndex,
+            index: i,
             notes,
             thumbnail,
           });
-          visibleIndex++;
         }
 
-        console.log("syncAllSlides:", slideList.length, "visible slides");
+        console.log("syncAllSlides: sending", slideList.length, "slides");
 
         if (client) {
           client.sendToGroup(

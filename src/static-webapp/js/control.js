@@ -31,12 +31,27 @@
         Shared.setStatus("connected", "Connected");
         client.joinGroup(token);
         // Notify host that presenter (controller) has joined
-        client.sendToGroup(
-          token,
-          { type: "PresenterJoined" },
-          "json",
-          { noEcho: true }
-        );
+        setTimeout(function () {
+          console.log("Controller: sending PresenterJoined");
+          client.sendToGroup(
+            token,
+            { type: "PresenterJoined" },
+            "json",
+            { noEcho: true }
+          );
+        }, 500); // Wait for joinGroup to complete
+        // Retry if no slides received after 5 seconds
+        setTimeout(function () {
+          if (allSlides.length === 0) {
+            console.log("Controller: no slides yet, re-requesting...");
+            client.sendToGroup(
+              token,
+              { type: "PresenterJoined" },
+              "json",
+              { noEcho: true }
+            );
+          }
+        }, 5000);
       });
 
       client.on("disconnected", () => {
@@ -60,6 +75,8 @@
   // ---------- Message Handling ----------
 
   function handleMessage(data) {
+    console.log("Controller received:", data.type, data.type === "AllSlides" ? (data.slides ? data.slides.length + " slides" : "no slides") : "");
+
     switch (data.type) {
       case "UpdateStatus":
         document.getElementById("docName").textContent =
@@ -84,6 +101,8 @@
 
       case "AllSlides":
         allSlides = data.slides || [];
+        console.log("Controller: AllSlides received,", allSlides.length, "slides",
+          allSlides.map(function (s, i) { return "slide" + i + ": thumb=" + (s.thumbnail ? s.thumbnail.length : 0) + " notes=" + s.notes.length; }));
         renderSlidesGrid();
         // Update current slide if we have index
         if (currentSlideIndex >= 0 && allSlides[currentSlideIndex]) {
