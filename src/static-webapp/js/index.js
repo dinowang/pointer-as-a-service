@@ -110,10 +110,7 @@
       client.on("connected", () => {
         Shared.setStatus("connected", "Connected");
         client.joinGroup(token);
-        if (officeReady) {
-          syncStatus();
-          syncAllSlides();
-        }
+        if (officeReady) syncStatus();
       });
 
       client.on("disconnected", () => {
